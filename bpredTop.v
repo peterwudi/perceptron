@@ -37,10 +37,10 @@ module bpredTop(
 	output reg [31:0]			bpredictor_soin_debug
 );
 
-`define perceptron_index(PC)				PC[7:2]
+`define PER_INDEX(PC)		PC[7:2]
 
-parameter perceptron_size					= 64;
-
+parameter perceptronSize	= 64;
+parameter ghrSize				= 12;
 
 /*
 fetch_bpredictor_PC is to be used before clock edge
@@ -139,9 +139,8 @@ assign inst_opcode_x_h	= fetch_bpredictor_inst[16:11];
 assign OPERAND_IMM16S	= {{16{fetch_bpredictor_inst[21]}}, fetch_bpredictor_inst[21:6]};
 assign OPERAND_IMM26		= {PCH4, fetch_bpredictor_inst[31:6], 2'b00};
 
-assign lu_index	= `perceptron_index(fetch_bpredictor_PC);
-assign up_index	= up_carry_data;
-assign bit_carry = {GHR_r, PC4_r};
+assign lu_index	= `PER_INDEX(fetch_bpredictor_PC);
+assign up_index	= `PER_INDEX(execute_bpredictor_PC4);
 
 // Instruction Memory
 insnMem insnMem(
@@ -151,17 +150,6 @@ insnMem insnMem(
 	.wraddress(insnMem_addr_w),
 	.wren(insnMem_wren),
 	.q(fetch_bpredictor_inst)
-);
-
-
-// Bimodal
-mem mem (
-	.clock(clk),
-	.data(up_bimodal_data),
-	.rdaddress(lu_bimodal_index),
-	.wraddress(up_bimodal_index),
-	.wren(up_wen),
-	.q(lu_bimodal_data)
 );
 
 integer i;
@@ -179,7 +167,7 @@ initial begin
 	ras_top <= 0;
 	ras_count <= 0;
 	
-	GHR <= 6'b1;
+	GHR <= 'b1;
 	
 	for (i = 0; i < 16; i = i + 1)
 	begin
@@ -193,7 +181,7 @@ begin
 	case (inst_opcode)
 		6'h26, 6'h0e, 6'h2e, 6'h16, 6'h36,
 		6'h1e, 6'h06, 6'h01: begin
-				branch_is			= 1;
+			branch_is			= 1;
 		end
 		6'h00 : begin
 			branch_is			= 1;
@@ -222,7 +210,7 @@ begin
 		end
 	endcase
 	target_computable = branch_is & (inst_opcode < 6'h3a);
-	isIMM16 = (inst_opcode <= 6'h01) ? 0 : 1;
+	isIMM16	= (inst_opcode <= 6'h01) ? 0 : 1;
 	isC_R		= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h != 6'h0d)))) ? 1 : 0;
 	isCall	= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h == 6'h1d)))) ? 1 : 0;
 end
@@ -298,7 +286,6 @@ begin
 	endcase
 end
 
-
 // Output Mux
 always@(*)
 begin
@@ -321,19 +308,17 @@ begin
 end
 
 
-
 //=====================================
-// Bimodal
+// Perceptron
 //=====================================
 
-wire [31:0] execute_bpredictor_PC		= execute_bpredictor_PC4 - 4;
+wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
-
-//SPEED
-//assign up_bimodal_index					= reset ? reset_index : execute_bpredictor_bimodal[9+2-1:2];
-//assign up_bimodal_index					= reset ? reset_index : `BIMODAL_INDEX(execute_bpredictor_PC4);
-assign up_wen							= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
-
+// NOTE: this is the old thing, which assumes that the update logic is somewhere else.
+// It might not be trivial for perceptron, let's include it in the branch predictor module,
+// but it has 2 cycles to complete so I don't think it's going to be a big problem.
+//assign up_wen								= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
+assign up_wen								= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
 
 assign bpredictor_fetch_p_dir			= branch_is & (target_computable | (isC_R & ~isCall)) ? lu_bimodal_data[1] : 1'b0;
