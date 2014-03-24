@@ -70,18 +70,19 @@ reg	[63:0]						hit_count;
 // 64 entries for now
 wire									up_wen;
 
-// HOB (3*12 = 36) and LOB (5*12 = 60) data
-wire	[35:0]						lu_hob_data;
-wire	[35:0]						up_hob_data;
-wire	[59:0]						lu_lob_data;
-wire	[59:0]						up_lob_data;
+localparam hob = 8;
+localparam lob = 8 - hob;
+
+wire	[hob*12-1:0]				lu_hob_data;
+wire	[hob*12-1:0]				up_hob_data;
+wire	[lob*12-1:0]				lu_lob_data;
+wire	[lob*12-1:0]				up_lob_data;
 
 wire	[31:0]						fetch_bpredictor_inst;
 
 reg	[8:0]							reset_index;
 
-// 12-bit GHR
-reg	[11:0]						GHR;
+reg	[ghrSize-1:0]				GHR;
 
 reg									isC_R;	// determines if it is a call or return
 reg									isCall;	// determines if it is a call
@@ -100,8 +101,8 @@ reg									ras_exc_dec;
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
 // TODO: This is fake, need to implement the actual thing
-assign	up_hob_data = execute_bpredictor_data[95:60];
-assign	up_lob_data = execute_bpredictor_data[59:0];
+assign	up_hob_data = execute_bpredictor_data[95:0];
+//assign	up_lob_data = execute_bpredictor_data[59:0];
 
 
 // HOB table
@@ -113,7 +114,7 @@ hobRam hobTable(
 	.wren(up_wen),
 	.q(lu_hob_data)
 );
-
+/*
 // LOB table
 lobRam lobTable(
 	.clock(clk),
@@ -123,7 +124,8 @@ lobRam lobTable(
 	.wren(up_wen),
 	.q(lu_lob_data)
 );
- 
+*/
+
 //=====================================
 // Predecoding
 //=====================================
@@ -314,8 +316,8 @@ genvar i;
 generate
 	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
 		per_addsub per_addsub_lvl1(
-			.dataa((GHR[i] == 1) ? lu_hob_data[i*3+2:i*3] : (~lu_hob_data[i*3+2:i*3] + 1)),
-			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+1)*3+2:(i+1)*3] : (~lu_hob_data[(i+1)*3+2:(i+1)*3]+1)),
+			.dataa((GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1)),
+			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+2)*hob-1:(i+1)*hob] : (~lu_hob_data[(i+2)*hob-1:(i+1)*hob]+1)),
 			.result(perRes_lvl1[i/2])
 		);
 	end
