@@ -307,7 +307,7 @@ wire signed	[7:0]	perRes_lvl1 [5:0];
 wire signed [7:0]	perRes_lvl2 [2:0];
 
 assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
-assign	perceptronRes = perceptronSum[7];
+assign	perceptronRes = ~perceptronSum[7];
 
 // Calculate perceptron
 genvar i;
