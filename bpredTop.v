@@ -5,25 +5,19 @@ module bpredTop(
 	input wire					insnMem_wren,
 	input wire	[31:0]		insnMem_data_w,
 	input wire	[7:0]			insnMem_addr_w,
-	//input wire	[11:0]		up_carry_data,
 	output reg	[31:0]		fetch_bpredictor_PC,
 
-	//output wire	[11:0]		bit_carry,		// lower 9 bits of the mem content that needs to get
-														// propagated through the pipeline for mem update.
-														// [8:6] is the last 3 bits of BTB content, the rest
-														// is bimodal
-	
 	input							soin_bpredictor_stall,
 
 	output						bpredictor_fetch_p_dir,
-	output	[11:0]			bpredictor_fetch_bimodal,
 
 	input							execute_bpredictor_update,
 	input	[31:0]				execute_bpredictor_PC4,
 	input	[31:0]				execute_bpredictor_target,
 	input							execute_bpredictor_dir,
 	input							execute_bpredictor_miss,
-	input	[11:0]				execute_bpredictor_bimodal,
+	// Fake thing, implement this later
+	input	[95:0]				execute_bpredictor_data,
 	
 	input	[31:0]				soin_bpredictor_debug_sel,
 
@@ -36,8 +30,6 @@ module bpredTop(
 	
 	output reg [31:0]			bpredictor_soin_debug
 );
-
-`define PER_INDEX(PC)		PC[7:2]
 
 parameter perceptronSize	= 64;
 parameter ghrSize				= 12;
@@ -76,9 +68,6 @@ reg	[63:0]						miss_count;
 reg	[63:0]						hit_count;
 
 // 64 entries for now
-wire	[5:0]							lu_index;
-reg	[5:0]							lu_index_r;
-wire	[5:0]							up_index;
 wire									up_wen;
 
 // HOB (3*12 = 36) and LOB (5*12 = 60) data
@@ -87,15 +76,12 @@ wire	[35:0]						up_hob_data;
 wire	[59:0]						lu_lob_data;
 wire	[59:0]						up_lob_data;
 
-
-
 wire	[31:0]						fetch_bpredictor_inst;
 
 reg	[8:0]							reset_index;
 
 // 12-bit GHR
 reg	[11:0]						GHR;
-reg	[11:0]						GHR_r;
 
 reg									isC_R;	// determines if it is a call or return
 reg									isCall;	// determines if it is a call
@@ -105,18 +91,22 @@ reg									isCall;	// determines if it is a call
 reg	[31:0]						ras [15:0];
 
 reg	[3:0]							ras_top;
-reg	[3:0]							ras_count;
 reg									ras_dec;
 reg									ras_inc;
 reg									ras_exc_inc;
 reg									ras_exc_dec;
 
+// TODO: This is fake, need to implement the actual thing
+assign	up_hob_data = execute_bpredictor_data[95:60];
+assign	up_lob_data = execute_bpredictor_data[59:0];
+
+
 // HOB table
 hobRam hobTable(
 	.clock(clk),
 	.data(up_hob_data),
-	.rdaddress(lu_index),
-	.wraddress(up_index),
+	.rdaddress(fetch_bpredictor_PC[7:2]),
+	.wraddress(execute_bpredictor_PC[7:2]),
 	.wren(up_wen),
 	.q(lu_hob_data)
 );
@@ -125,8 +115,8 @@ hobRam hobTable(
 lobRam lobTable(
 	.clock(clk),
 	.data(up_lob_data),
-	.rdaddress(lu_index),
-	.wraddress(up_index),
+	.rdaddress(fetch_bpredictor_PC[7:2]),
+	.wraddress(execute_bpredictor_PC[7:2]),
 	.wren(up_wen),
 	.q(lu_lob_data)
 );
@@ -139,9 +129,6 @@ assign inst_opcode_x_h	= fetch_bpredictor_inst[16:11];
 assign OPERAND_IMM16S	= {{16{fetch_bpredictor_inst[21]}}, fetch_bpredictor_inst[21:6]};
 assign OPERAND_IMM26		= {PCH4, fetch_bpredictor_inst[31:6], 2'b00};
 
-assign lu_index	= `PER_INDEX(fetch_bpredictor_PC);
-assign up_index	= `PER_INDEX(execute_bpredictor_PC4);
-
 // Instruction Memory
 insnMem insnMem(
 	.clock(clk),
@@ -152,7 +139,7 @@ insnMem insnMem(
 	.q(fetch_bpredictor_inst)
 );
 
-integer i;
+integer j;
 
 initial begin
 	fetch_bpredictor_PC <= 32'h0;
@@ -165,13 +152,12 @@ initial begin
 	branch_is <= 0;
 	isCall <= 0;
 	ras_top <= 0;
-	ras_count <= 0;
 	
 	GHR <= 'b1;
 	
-	for (i = 0; i < 16; i = i + 1)
+	for (j = 0; j < 16; j = j + 1)
 	begin
-		ras[i] <= 32'b0;
+		ras[j] <= 32'b0;
 	end
 end
 
@@ -312,40 +298,50 @@ end
 // Perceptron
 //=====================================
 
+wire					perceptronRes;	
+wire signed	[7:0]	perceptronSum;
+wire signed	[7:0]	perRes_lvl1 [5:0];
+wire signed [7:0]	perRes_lvl2 [2:0];
+
+assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
+assign	perceptronRes = perceptronSum[7];
+
+// Calculate perceptron
+genvar i;
+generate
+	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
+		per_addsub per_addsub_lvl1(
+			.dataa((GHR[i] == 1) ? lu_hob_data[i*3+2:i*3] : (~lu_hob_data[i*3+2:i*3] + 1)),
+			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+1)*3+2:(i+1)*3] : (~lu_hob_data[(i+1)*3+2:(i+1)*3]+1)),
+			.result(perRes_lvl1[i/2])
+		);
+	end
+	
+	for (i = 0; i < 6; i = i + 2) begin: per_lvl2
+		per_addsub per_addsub_lvl2(
+			.dataa(perRes_lvl1[i]),
+			.datab(perRes_lvl1[i+1]),
+			.result(perRes_lvl2[i/2])
+		);
+	end
+endgenerate
+
+// Branch direction
+assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCall)) ? perceptronRes : 1'b0;
+
+// Update perceptron
+// Do this later
+
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
-// NOTE: this is the old thing, which assumes that the update logic is somewhere else.
-// It might not be trivial for perceptron, let's include it in the branch predictor module,
+//wire execute_bpredictor_update;
+
+// TODO: this is the old thing, which assumes that the update logic is somewhere else.
+// It might not be trivial for perceptron, let's implement the logic in the branch predictor module,
 // but it has 2 cycles to complete so I don't think it's going to be a big problem.
-//assign up_wen								= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
-assign up_wen								= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
+assign up_wen	= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
 
-assign bpredictor_fetch_p_dir			= branch_is & (target_computable | (isC_R & ~isCall)) ? lu_bimodal_data[1] : 1'b0;
-//assign bpredictor_fetch_p_dir			= branch_is & lu_bimodal_data[1];
-//assign bpredictor_fetch_p_target		= bpredictor_fetch_p_dir ? computed_target : PC4_r;
-assign bpredictor_fetch_bimodal			= {lu_bimodal_index_r, lu_bimodal_data};
-
-
-// Update bimodal data
-always@(*)
-begin 
-	if (reset)
-		up_bimodal_data					= 2'b00;
-	else
-	begin
-	case ({execute_bpredictor_dir, execute_bpredictor_bimodal[1:0]})
-		3'b000: begin up_bimodal_data	= 2'b00; end
-		3'b001: begin up_bimodal_data	= 2'b00; end
-		3'b010: begin up_bimodal_data	= 2'b01; end
-		3'b011: begin up_bimodal_data	= 2'b10; end
-		3'b100: begin up_bimodal_data	= 2'b01; end
-		3'b101: begin up_bimodal_data	= 2'b10; end
-		3'b110: begin up_bimodal_data	= 2'b11; end
-		3'b111: begin up_bimodal_data	= 2'b11; end
-	endcase
-	end
-end
 
 always@( * )
 begin
@@ -361,53 +357,47 @@ begin
 	endcase
 end
 
-always@(posedge clk)
-begin
-	if (reset)
-	begin
-		lookup_count					<= 0;
-		update_count					<= 0;
-		miss_count						<= 0;
-		hit_count						<= 0;
-		GHR								<= 6'b0;
+always@(posedge clk) begin
+	if (reset) begin
+		lookup_count		<= 0;
+		update_count		<= 0;
+		miss_count			<= 0;
+		hit_count			<= 0;
+		GHR					<= 'b0;
 		
-		if (reset)
-			reset_index					<= reset_index + 1;
-	end
-	else
-	begin
-		PCH4							<= fetch_bpredictor_PC[31:28];
-		PC4_r							<= fetch_bpredictor_PC;
-		lu_bimodal_index_r		<= lu_bimodal_index;
-	
-		GHR							<= {execute_bpredictor_dir, GHR[5:1]};
-		GHR_r							<= GHR;	
-	
-		//RAS
-		if (isC_R && isCall)
-		begin
-			ras[ras_top] <= PC4;
+		if (reset) begin
+			reset_index		<= reset_index + 1;
 		end
-
-		if (ras_exc_inc) begin
-			ras_top <= ras_top + 1;
-		end
-		else if (ras_exc_dec) begin
-			ras_top <= ras_top - 1;
-		end
-		else if (ras_inc) begin
-			ras_top <= ras_top + 1;
-		end
-		else if (ras_dec) begin
-			ras_top <= ras_top - 1;
-		end
+		else begin
+			PCH4				<= fetch_bpredictor_PC[31:28];
+			PC4_r				<= fetch_bpredictor_PC;
 		
-		if (!soin_bpredictor_stall)
-		begin
-			lookup_count				<= lookup_count + 1;
-
-			if (execute_bpredictor_update)
+			GHR				<= {execute_bpredictor_dir, GHR[ghrSize-1:1]};
+		
+			//RAS
+			if (isC_R && isCall)
 			begin
+				ras[ras_top] <= PC4;
+			end
+
+			if (ras_exc_inc) begin
+				ras_top <= ras_top + 1;
+			end
+			else if (ras_exc_dec) begin
+				ras_top <= ras_top - 1;
+			end
+			else if (ras_inc) begin
+				ras_top <= ras_top + 1;
+			end
+			else if (ras_dec) begin
+				ras_top <= ras_top - 1;
+			end
+			
+			if (!soin_bpredictor_stall) begin
+				lookup_count				<= lookup_count + 1;
+			end
+			
+			if (execute_bpredictor_update) begin
 				update_count			<= update_count + 1;
 				miss_count				<= miss_count + execute_bpredictor_miss;
 				hit_count				<= hit_count + (execute_bpredictor_miss ? 0 : 1'b1);
@@ -415,6 +405,5 @@ begin
 		end
 	end
 end
-
 
 endmodule
