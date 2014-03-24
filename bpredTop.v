@@ -70,7 +70,7 @@ reg	[63:0]						hit_count;
 // 64 entries for now
 wire									up_wen;
 
-localparam hob = 8;
+localparam hob = 3;
 localparam lob = 8 - hob;
 
 wire	[hob*12-1:0]				lu_hob_data;
@@ -100,9 +100,9 @@ reg									ras_exc_dec;
 
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
-// TODO: This is fake, need to implement the actual thing
-assign	up_hob_data = execute_bpredictor_data[95:0];
-//assign	up_lob_data = execute_bpredictor_data[59:0];
+// TODO: This is fake, may need to implement the actual thing
+assign	up_hob_data = execute_bpredictor_data[95:60];
+assign	up_lob_data = execute_bpredictor_data[59:0];
 
 
 // HOB table
@@ -114,7 +114,7 @@ hobRam hobTable(
 	.wren(up_wen),
 	.q(lu_hob_data)
 );
-/*
+
 // LOB table
 lobRam lobTable(
 	.clock(clk),
@@ -124,7 +124,7 @@ lobRam lobTable(
 	.wren(up_wen),
 	.q(lu_lob_data)
 );
-*/
+
 
 //=====================================
 // Predecoding
