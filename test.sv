@@ -1,26 +1,22 @@
 `timescale 1ns / 100ps 
 
-module test; 
+module test(); 
 reg					clk;
 reg					insnMem_wren = 1'b0;
 reg	[31:0]		insnMem_data_w = 32'b0;
 reg	[7:0]			insnMem_addr_w = 8'b11111111;
-reg	[29:0]		up_btb_data = 30'b1111;
-reg	[8:0]			up_carry_data = 9'b00100111;
-reg	[3:0]			byte_en = 4'b0001;
+reg	[31:0]		fetch_bpredictor_PC;
 
-wire	[8:0]			bit_carry;
 reg					soin_bpredictor_stall = 1'b0;
 
 wire					bpredictor_fetch_p_dir;
-wire	[11:0]		bpredictor_fetch_bimodal;
 
-reg					execute_bpredictor_update = 1'b1;
+reg					execute_bpredictor_update = 1'b0;
 reg	[31:0]		execute_bpredictor_PC4 = 32'd128;
 reg	[31:0]		execute_bpredictor_target = 32'b0;
 reg					execute_bpredictor_dir = 1'b1;
 reg					execute_bpredictor_miss = 1'b0;
-reg	[11:0]		execute_bpredictor_bimodal = 2'b11;
+reg	[95:0]		execute_bpredictor_data = 'hFFFF;
 	
 reg	[31:0]		soin_bpredictor_debug_sel = 2'b00;
 
@@ -28,45 +24,12 @@ reg					execute_missPred = 1'b0;
 reg					execute_c_r_after_r = 1'b0;
 reg					execute_isCall = 1'b0;
 
-
 reg					reset = 1'b0;
 	
 wire	[31:0]		bpredictor_soin_debug;
 
 
-bpredTop DUP(
-	.clk(clk),
-	.insnMem_wren(insnMem_wren),
-	.insnMem_data_w(insnMem_data_w),
-	.insnMem_addr_w(insnMem_addr_w),
-	.up_btb_data(up_btb_data),
-	.up_carry_data(up_carry_data),
-	.byte_en(byte_en),
-
-	.bit_carry(bit_carry),
-	.soin_bpredictor_stall(soin_bpredictor_stall),
-
-	.bpredictor_fetch_p_dir(bpredictor_fetch_p_dir),
-	.bpredictor_fetch_bimodal(bpredictor_fetch_bimodal),
-
-	.execute_bpredictor_update(execute_bpredictor_update),
-	.execute_bpredictor_PC4(execute_bpredictor_PC4),
-	.execute_bpredictor_target(execute_bpredictor_target),
-	.execute_bpredictor_dir(execute_bpredictor_dir),
-	.execute_bpredictor_miss(execute_bpredictor_miss),
-	.execute_bpredictor_bimodal(execute_bpredictor_bimodal),
-	
-	.soin_bpredictor_debug_sel(soin_bpredictor_debug_sel),
-
-
-	.execute_missPred(execute_missPred),
-	.execute_c_r_after_r(execute_c_r_after_r),
-	.execute_isCall(execute_isCall),
-	.reset(reset),
-	
-	
-	.bpredictor_soin_debug(bpredictor_soin_debug)
-);
+bpredTop dut(.*);
 
 
 //clock pulse with a 20 ns period 
@@ -74,16 +37,16 @@ always begin
    #5  clk = ~clk; 
 end
 
-
 initial begin 
 	$timeformat(-9, 1, " ns", 6); 
 	clk = 1'b0;    // time = 0
 
 	
-	#25
-	byte_en <= 4'b1111;
+	for (int i = 0; i < 32; i++) begin
+		@(negedge clk);
+	end
 	
-	
+	$stop(0);
 	
 	// pc <= 32'h0;
 	// beq, I-type, PC <- PC + 4 + IMM16

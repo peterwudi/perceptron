@@ -1,0 +1,88 @@
+-- Copyright (C) 1991-2013 Altera Corporation
+-- Your use of Altera Corporation's design tools, logic functions 
+-- and other software and tools, and its AMPP partner logic 
+-- functions, and any output files from any of the foregoing 
+-- (including device programming or simulation files), and any 
+-- associated documentation or information are expressly subject 
+-- to the terms and conditions of the Altera Program License 
+-- Subscription Agreement, Altera MegaCore Function License 
+-- Agreement, or other applicable license agreement, including, 
+-- without limitation, that your use is for the sole purpose of 
+-- programming logic devices manufactured by Altera and sold by 
+-- Altera or its authorized distributors.  Please refer to the 
+-- applicable agreement for further details.
+
+-- Quartus II generated Memory Initialization File (.mif)
+
+WIDTH=36;
+DEPTH=64;
+
+ADDRESS_RADIX=UNS;
+DATA_RADIX=UNS;
+
+CONTENT BEGIN
+	0   :   68719476735;
+	1   :   66571993088;
+	2   :   64424509441;
+	3   :   62277025794;
+	4   :   60129542147;
+	5   :   57982058500;
+	6   :   55834574853;
+	7   :   53687091206;
+	8   :   51539607559;
+	9   :   49392123912;
+	10  :   47244640265;
+	11  :   45097156618;
+	12  :   42949672971;
+	13  :   40802189324;
+	14  :   38654705677;
+	15  :   36507222030;
+	16  :   34359738383;
+	17  :   32212254736;
+	18  :   30064771089;
+	19  :   27917287442;
+	20  :   25769803795;
+	21  :   23622320148;
+	22  :   21474836501;
+	23  :   19327352854;
+	24  :   17179869207;
+	25  :   15032385560;
+	26  :   12884901913;
+	27  :   10737418266;
+	28  :   8589934619;
+	29  :   6442450972;
+	30  :   4294967325;
+	31  :   2147483678;
+	32  :   31;
+	33  :   66571993120;
+	34  :   64424509473;
+	35  :   62277025826;
+	36  :   60129542179;
+	37  :   57982058532;
+	38  :   55834574885;
+	39  :   53687091238;
+	40  :   51539607591;
+	41  :   49392123944;
+	42  :   47244640297;
+	43  :   45097156650;
+	44  :   42949673003;
+	45  :   40802189356;
+	46  :   38654705709;
+	47  :   36507222062;
+	48  :   34359738415;
+	49  :   32212254768;
+	50  :   30064771121;
+	51  :   27917287474;
+	52  :   25769803827;
+	53  :   23622320180;
+	54  :   21474836533;
+	55  :   19327352886;
+	56  :   17179869239;
+	57  :   15032385592;
+	58  :   12884901945;
+	59  :   10737418298;
+	60  :   8589934651;
+	61  :   6442451004;
+	62  :   4294967357;
+	63  :   2147483710;
+END;

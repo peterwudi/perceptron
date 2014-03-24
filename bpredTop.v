@@ -96,6 +96,9 @@ reg									ras_inc;
 reg									ras_exc_inc;
 reg									ras_exc_dec;
 
+
+wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
+
 // TODO: This is fake, need to implement the actual thing
 assign	up_hob_data = execute_bpredictor_data[95:60];
 assign	up_lob_data = execute_bpredictor_data[59:0];
@@ -120,7 +123,7 @@ lobRam lobTable(
 	.wren(up_wen),
 	.q(lu_lob_data)
 );
-
+ 
 //=====================================
 // Predecoding
 //=====================================
@@ -331,14 +334,12 @@ assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCal
 
 // Update perceptron
 // Do this later
-
-wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
-
 //wire execute_bpredictor_update;
 
 // TODO: this is the old thing, which assumes that the update logic is somewhere else.
-// It might not be trivial for perceptron, let's implement the logic in the branch predictor module,
-// but it has 2 cycles to complete so I don't think it's going to be a big problem.
+// It might not be trivial for perceptron, but (1) it has 2 cycles before the branch is resolved,
+// and (2) it might not be required to have the update result written back immediately. So I don't
+// think it's going to be a big problem.
 assign up_wen	= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
 
