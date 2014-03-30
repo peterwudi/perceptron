@@ -312,34 +312,33 @@ assign	perceptronRes = ~perceptronSum[6];
 
 // Calculate perceptron
 
-// 2-to-1 adder reduction tree approach, 234.96MHz
-genvar i;
-generate
-	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
-		per_addsub per_addsub_lvl1(
-			.dataa((GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1)),
-			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+2)*hob-1:(i+1)*hob] : (~lu_hob_data[(i+2)*hob-1:(i+1)*hob]+1)),
-			.result(perRes_lvl1[i/2])
-		);
-	end
-	
-	for (i = 0; i < 6; i = i + 2) begin: per_lvl2
-		per_addsub per_addsub_lvl2(
-			.dataa(perRes_lvl1[i]),
-			.datab(perRes_lvl1[i+1]),
-			.result(perRes_lvl2[i/2])
-		);
-	end
-endgenerate
-
-assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
+//// 2-to-1 adder reduction tree approach, 235.79 MHz
+//genvar i;
+//generate
+//	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
+//		per_addsub per_addsub_lvl1(
+//			.dataa((GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1)),
+//			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+2)*hob-1:(i+1)*hob] : (~lu_hob_data[(i+2)*hob-1:(i+1)*hob]+1)),
+//			.result(perRes_lvl1[i/2])
+//		);
+//	end
+//	
+//	for (i = 0; i < 6; i = i + 2) begin: per_lvl2
+//		per_addsub per_addsub_lvl2(
+//			.dataa(perRes_lvl1[i]),
+//			.datab(perRes_lvl1[i+1]),
+//			.result(perRes_lvl2[i/2])
+//		);
+//	end
+//endgenerate
+//
+//assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 
 // Wallace tree-like structure
-//wallace_3bit_12 wallaceTree(
-//	.op(lu_hob_data),
-//	.res(perceptronSum)
-//);
-
+wallace_3bit_12 wallaceTree(
+	.op(lu_hob_data),
+	.res(perceptronSum)
+);
 
 
 // Branch direction
