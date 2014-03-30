@@ -304,14 +304,15 @@ end
 //=====================================
 
 wire					perceptronRes;	
-wire signed	[7:0]	perceptronSum;
-wire signed	[7:0]	perRes_lvl1 [5:0];
-wire signed [7:0]	perRes_lvl2 [2:0];
+wire signed	[6:0]	perceptronSum;
+wire signed	[6:0]	perRes_lvl1 [5:0];
+wire signed [6:0]	perRes_lvl2 [2:0];
 
-assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
-assign	perceptronRes = ~perceptronSum[7];
+assign	perceptronRes = ~perceptronSum[6];
 
 // Calculate perceptron
+
+// 2-to-1 adder reduction tree approach, 234.96MHz
 genvar i;
 generate
 	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
@@ -331,8 +332,13 @@ generate
 	end
 endgenerate
 
-// Try Wallace tree-like structure
+assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 
+// Wallace tree-like structure
+//wallace_3bit_12 wallaceTree(
+//	.op(lu_hob_data),
+//	.res(perceptronSum)
+//);
 
 
 

@@ -41,7 +41,7 @@ fullAdder s1_0_3 (.x(op[27]),	.y(op[30]),	.cin(op[33]),	.s(s1_res[0][3]),	.cout(
 fullAdder s1_1_0 (.x(op[1]),	.y(op[4]),	.cin(op[7]),	.s(s1_res[1][0]),	.cout(s1_cout[1][0]));
 fullAdder s1_1_1 (.x(op[10]),	.y(op[13]),	.cin(op[16]),	.s(s1_res[1][1]),	.cout(s1_cout[1][1]));
 fullAdder s1_1_2 (.x(op[19]),	.y(op[22]),	.cin(op[25]),	.s(s1_res[1][2]),	.cout(s1_cout[1][2]));
-fullAdder s1_1_3 (.x(op[28]),	.y(op[31]),	.cin(op[36]),	.s(s1_res[1][3]),	.cout(s1_cout[1][3]));
+fullAdder s1_1_3 (.x(op[28]),	.y(op[31]),	.cin(op[34]),	.s(s1_res[1][3]),	.cout(s1_cout[1][3]));
 
 fullAdder s1_2_0 (.x(op[2]),	.y(op[5]),	.cin(op[8]),	.s(s1_res[2][0]),	.cout(s1_cout[2][0]));
 fullAdder s1_2_1 (.x(op[11]),	.y(op[14]),	.cin(op[17]),	.s(s1_res[2][0]),	.cout(s1_cout[2][1]));
@@ -100,7 +100,7 @@ halfAdder s4_3_1 (.x(s3_cout[2][0]),	.y(s3_cout[2][1]), 								.s(s4_res[3][1])
 
 fullAdder s4_4_0 (.x(s3_res[4][0]),		.y(s3_cout[3][0]),	.cin(s3_cout[3][1]),	.s(s4_res[4][0]), .cout(s4_cout[4][0]));
 
-assign s4_res[5][0] = s4_cout[4][0];
+assign s4_res[5][0] = s3_cout[4][0];
 
 // Stage 5
 wire	[5:0]	s5_res 	[1:0];
@@ -117,8 +117,6 @@ fullAdder s5_4_0 (.x(s4_res[4][0]),		.y(s4_cout[3][0]),	.cin(s4_cout[3][1]),	.s(
 
 halfAdder s5_5_0 (.x(s4_res[5][0]),		.y(s4_cout[4][0]), 								.s(s5_res[5][0]),	.cout(s5_cout[5][0]));
 
-assign s5_res[6][0] = s5_cout[5][0];
-
 // Stage 6
 wire	s6_res	[5:0];
 wire	s6_cout	[5:0];
@@ -131,28 +129,24 @@ fullAdder s6_4_0 (.x(s5_res[4][0]),		.y(s5_cout[3][0]),	.cin(s5_cout[3][1]),	.s(
 
 halfAdder s6_5_0 (.x(s5_res[5][0]),		.y(s5_cout[4][0]), 								.s(s6_res[5]),	.cout(s6_cout[5]));
 
-assign s6_res[6] = s5_res[6][0] | s6_cout[5];
-
-
 // Stage 7
 wire	s7_res	[5:0];
 wire	s7_cout	[5:0];
 
 // Bits 0-3 done
 
-halfAdder s7_4_0 (.x(s6_res[4][0]),		.y(s6_cout[3][0]),	.s(s7_res[4]),	.cout(s7_cout[4]));
-halfAdder s7_5_0 (.x(s6_res[5][0]),		.y(s6_cout[4][0]),	.s(s7_res[5]),	.cout(s7_cout[5]));
-
-assign s7_res[6] = s6_res[6] | s7_cout[5];
+halfAdder s7_4_0 (.x(s6_res[4]),		.y(s6_cout[3]),	.s(s7_res[4]),	.cout(s7_cout[4]));
+halfAdder s7_5_0 (.x(s6_res[5]),		.y(s6_cout[4]),	.s(s7_res[5]),	.cout(s7_cout[5]));
 
 // Stage 8
-wire	s8_res	[5:0];
+wire	s8_res	[6:0];
+wire	s8_cout;
 
 // Bits 0-4 done
 
-halfAdder s8_5_0 (.x(s7_res[5][0]),		.y(s7_cout[4][0]),	.s(s8_res[5]),	.cout(s8_cout[5]));
+halfAdder s8_5_0 (.x(s7_res[5]),		.y(s7_cout[4]),	.s(s8_res[5]),	.cout(s8_cout));
 
-assign s8_res[6] = s7_res[6] | s8_cout[5];
+assign s8_res[6] = s5_cout[5][0] | s6_cout[5] | s7_cout[5] | s8_cout;
 
 
 // Final result

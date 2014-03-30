@@ -41,12 +41,12 @@ module per_addsub (
 	datab,
 	result);
 
-	input	[7:0]  dataa;
-	input	[7:0]  datab;
-	output	[7:0]  result;
+	input	[6:0]  dataa;
+	input	[6:0]  datab;
+	output	[6:0]  result;
 
-	wire [7:0] sub_wire0;
-	wire [7:0] result = sub_wire0[7:0];
+	wire [6:0] sub_wire0;
+	wire [6:0] result = sub_wire0[6:0];
 
 	lpm_add_sub	LPM_ADD_SUB_component (
 				.dataa (dataa),
@@ -68,7 +68,7 @@ module per_addsub (
 		LPM_ADD_SUB_component.lpm_hint = "ONE_INPUT_IS_CONSTANT=NO,CIN_USED=NO",
 		LPM_ADD_SUB_component.lpm_representation = "SIGNED",
 		LPM_ADD_SUB_component.lpm_type = "LPM_ADD_SUB",
-		LPM_ADD_SUB_component.lpm_width = 8;
+		LPM_ADD_SUB_component.lpm_width = 7;
 
 
 endmodule
@@ -94,20 +94,20 @@ endmodule
 // Retrieval info: PRIVATE: WhichConstant NUMERIC "0"
 // Retrieval info: PRIVATE: aclr NUMERIC "0"
 // Retrieval info: PRIVATE: clken NUMERIC "0"
-// Retrieval info: PRIVATE: nBit NUMERIC "8"
+// Retrieval info: PRIVATE: nBit NUMERIC "7"
 // Retrieval info: PRIVATE: new_diagram STRING "1"
 // Retrieval info: LIBRARY: lpm lpm.lpm_components.all
 // Retrieval info: CONSTANT: LPM_DIRECTION STRING "ADD"
 // Retrieval info: CONSTANT: LPM_HINT STRING "ONE_INPUT_IS_CONSTANT=NO,CIN_USED=NO"
 // Retrieval info: CONSTANT: LPM_REPRESENTATION STRING "SIGNED"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "LPM_ADD_SUB"
-// Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "8"
-// Retrieval info: USED_PORT: dataa 0 0 8 0 INPUT NODEFVAL "dataa[7..0]"
-// Retrieval info: USED_PORT: datab 0 0 8 0 INPUT NODEFVAL "datab[7..0]"
-// Retrieval info: USED_PORT: result 0 0 8 0 OUTPUT NODEFVAL "result[7..0]"
-// Retrieval info: CONNECT: @dataa 0 0 8 0 dataa 0 0 8 0
-// Retrieval info: CONNECT: @datab 0 0 8 0 datab 0 0 8 0
-// Retrieval info: CONNECT: result 0 0 8 0 @result 0 0 8 0
+// Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "7"
+// Retrieval info: USED_PORT: dataa 0 0 7 0 INPUT NODEFVAL "dataa[6..0]"
+// Retrieval info: USED_PORT: datab 0 0 7 0 INPUT NODEFVAL "datab[6..0]"
+// Retrieval info: USED_PORT: result 0 0 7 0 OUTPUT NODEFVAL "result[6..0]"
+// Retrieval info: CONNECT: @dataa 0 0 7 0 dataa 0 0 7 0
+// Retrieval info: CONNECT: @datab 0 0 7 0 datab 0 0 7 0
+// Retrieval info: CONNECT: result 0 0 7 0 @result 0 0 7 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL per_addsub.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL per_addsub.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL per_addsub.cmp FALSE
