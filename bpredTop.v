@@ -331,6 +331,11 @@ generate
 	end
 endgenerate
 
+// Try Wallace tree-like structure
+
+
+
+
 // Branch direction
 assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCall)) ? perceptronRes : 1'b0;
 
