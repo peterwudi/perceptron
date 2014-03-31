@@ -311,9 +311,9 @@ wire signed [6:0]	perRes_lvl2 [2:0];
 assign	perceptronRes = ~perceptronSum[6];
 
 // Calculate perceptron
+genvar i;
 
 //// 2-to-1 adder reduction tree approach, 235.79 MHz
-//genvar i;
 //generate
 //	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
 //		per_addsub per_addsub_lvl1(
@@ -335,8 +335,19 @@ assign	perceptronRes = ~perceptronSum[6];
 //assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 
 // Wallace tree-like structure
+wire [35:0]	wallaceInput;
+
+generate
+	for (i = 0; i < ghrSize; i = i + 1) begin: wallace
+		//assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1);
+		
+		// This is fake, see how fast it can get if read compliment directly
+		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data[35-i*hob:35-(i+1)*hob+1];
+	end
+endgenerate
+
 wallace_3bit_12 wallaceTree(
-	.op(lu_hob_data),
+	.op(wallaceInput),
 	.res(perceptronSum)
 );
 
