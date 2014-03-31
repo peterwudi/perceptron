@@ -74,6 +74,7 @@ localparam hob = 3;
 localparam lob = 8 - hob;
 
 wire	[hob*12-1:0]				lu_hob_data;
+wire	[hob*12-1:0]				lu_hob_data_c;
 wire	[hob*12-1:0]				up_hob_data;
 wire	[lob*12-1:0]				lu_lob_data;
 wire	[lob*12-1:0]				up_lob_data;
@@ -101,8 +102,9 @@ reg									ras_exc_dec;
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
 // TODO: This is fake, may need to implement the actual thing
-assign	up_hob_data = execute_bpredictor_data[95:60];
-assign	up_lob_data = execute_bpredictor_data[59:0];
+assign	up_hob_data		= execute_bpredictor_data[95:60];
+assign	up_hob_data_c	= execute_bpredictor_data[85:50];	// This is fake
+assign	up_lob_data		= execute_bpredictor_data[59:0];
 
 
 // HOB table
@@ -114,6 +116,17 @@ hobRam hobTable(
 	.wren(up_wen),
 	.q(lu_hob_data)
 );
+
+// HOB table for compliment
+hobRam hobTable_c(
+	.clock(clk),
+	.data(up_hob_data_c),
+	.rdaddress(fetch_bpredictor_PC[7:2]),
+	.wraddress(execute_bpredictor_PC[7:2]),
+	.wren(up_wen),
+	.q(lu_hob_data_c)
+);
+
 
 // LOB table
 lobRam lobTable(
@@ -313,12 +326,22 @@ assign	perceptronRes = ~perceptronSum[6];
 // Calculate perceptron
 genvar i;
 
-//// 2-to-1 adder reduction tree approach, 235.79 MHz
+//// 2-to-1 adder reduction tree approach, 
 //generate
+//	// Calculate negative here. 235.79 MHz (TODO: add 0-extended bits)
+////	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
+////		per_addsub per_addsub_lvl1(
+////			.dataa((GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1)),
+////			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+2)*hob-1:(i+1)*hob] : (~lu_hob_data[(i+2)*hob-1:(i+1)*hob]+1)),
+////			.result(perRes_lvl1[i/2])
+////		);
+////	end
+//	
+//	// Read pre-computed negative, 238.61 MHz
 //	for (i = 0; i < ghrSize; i = i + 2) begin: per_lvl1
 //		per_addsub per_addsub_lvl1(
-//			.dataa((GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1)),
-//			.datab((GHR[i+1] == 1) ? lu_hob_data[(i+2)*hob-1:(i+1)*hob] : (~lu_hob_data[(i+2)*hob-1:(i+1)*hob]+1)),
+//			.dataa((GHR[i] == 1) ? {4'b0,lu_hob_data[(i+1)*hob-1:i*hob]} : {4'b0,lu_hob_data_c[(i+1)*hob-1:i*hob]}),
+//			.datab((GHR[i+1] == 1) ? {4'b0,lu_hob_data[(i+2)*hob-1:(i+1)*hob]} : {4'b0,lu_hob_data_c[(i+2)*hob-1:(i+1)*hob]}),
 //			.result(perRes_lvl1[i/2])
 //		);
 //	end
@@ -330,19 +353,19 @@ genvar i;
 //			.result(perRes_lvl2[i/2])
 //		);
 //	end
+//	assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 //endgenerate
-//
-//assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 
 // Wallace tree-like structure
 wire [35:0]	wallaceInput;
 
 generate
 	for (i = 0; i < ghrSize; i = i + 1) begin: wallace
+		// Calculate negative here. 228.99 MHz
 		//assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1);
 		
-		// This is fake, see how fast it can get if read compliment directly
-		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data[35-i*hob:35-(i+1)*hob+1];
+		// Read pre-computed negative, 250.38 MHz
+		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data_c[(i+1)*hob-1:i*hob];
 	end
 endgenerate
 
