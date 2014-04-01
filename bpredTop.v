@@ -375,6 +375,46 @@ wallace_3bit_12 wallaceTree(
 );
 
 
+//// DSP block approach, 127.91 MHz, not good...
+//multAdd multAdd0(
+//	.dataa_0(lu_hob_data[2:0]),
+//	.dataa_1(lu_hob_data[5:3]),
+//	.dataa_2(lu_hob_data[8:6]),
+//	.dataa_3(lu_hob_data[11:9]),
+//	.datab_0((GHR[0] == 1)? 2'b01: 2'b11),
+//	.datab_1((GHR[1] == 1)? 2'b01: 2'b11),
+//	.datab_2((GHR[2] == 1)? 2'b01: 2'b11),
+//	.datab_3((GHR[3] == 1)? 2'b01: 2'b11),
+//	.result(perRes_lvl2[0])
+//);
+//	
+//multAdd multAdd1(
+//	.dataa_0(lu_hob_data[14:12]),
+//	.dataa_1(lu_hob_data[17:15]),
+//	.dataa_2(lu_hob_data[20:18]),
+//	.dataa_3(lu_hob_data[23:21]),
+//	.datab_0((GHR[4] == 1)? 2'b01: 2'b11),
+//	.datab_1((GHR[5] == 1)? 2'b01: 2'b11),
+//	.datab_2((GHR[6] == 1)? 2'b01: 2'b11),
+//	.datab_3((GHR[7] == 1)? 2'b01: 2'b11),
+//	.result(perRes_lvl2[1])
+//);
+//
+//multAdd multAdd2(
+//	.dataa_0(lu_hob_data[26:24]),
+//	.dataa_1(lu_hob_data[29:27]),
+//	.dataa_2(lu_hob_data[32:30]),
+//	.dataa_3(lu_hob_data[35:33]),
+//	.datab_0((GHR[8] == 1)? 2'b01: 2'b11),
+//	.datab_1((GHR[9] == 1)? 2'b01: 2'b11),
+//	.datab_2((GHR[10] == 1)? 2'b01: 2'b11),
+//	.datab_3((GHR[11] == 1)? 2'b01: 2'b11),
+//	.result(perRes_lvl2[2])
+//);
+//	
+//assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
+
+
 // Branch direction
 assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCall)) ? perceptronRes : 1'b0;
 
