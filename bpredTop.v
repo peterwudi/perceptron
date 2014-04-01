@@ -326,6 +326,21 @@ assign	perceptronRes = ~perceptronSum[6];
 // Calculate perceptron
 genvar i;
 
+//// Naive solution, 223.41 MHz
+//assign perceptronSum =	((GHR[0] == 1) ? lu_hob_data[2:0] : lu_hob_data_c[2:0]) +
+//								((GHR[1] == 1) ? lu_hob_data[5:3] : lu_hob_data_c[5:3]) +
+//								((GHR[2] == 1) ? lu_hob_data[8:6] : lu_hob_data_c[8:6]) +
+//								((GHR[3] == 1) ? lu_hob_data[11:9] : lu_hob_data_c[11:9]) +
+//								((GHR[4] == 1) ? lu_hob_data[14:12] : lu_hob_data_c[14:12]) +
+//								((GHR[5] == 1) ? lu_hob_data[17:15] : lu_hob_data_c[17:15]) +
+//								((GHR[6] == 1) ? lu_hob_data[20:18] : lu_hob_data_c[20:18]) +
+//								((GHR[7] == 1) ? lu_hob_data[23:21] : lu_hob_data_c[23:21]) +
+//								((GHR[8] == 1) ? lu_hob_data[26:24] : lu_hob_data_c[26:24]) +
+//								((GHR[9] == 1) ? lu_hob_data[29:27] : lu_hob_data_c[29:27]) +
+//								((GHR[10] == 1) ? lu_hob_data[32:30] : lu_hob_data_c[32:30]) +
+//								((GHR[11] == 1) ? lu_hob_data[35:33] : lu_hob_data_c[35:33]);
+								
+
 //// 2-to-1 adder reduction tree approach, 
 //generate
 //	// Calculate negative here. 235.79 MHz (TODO: add 0-extended bits)
@@ -364,7 +379,7 @@ generate
 		// Calculate negative here. 228.99 MHz
 		//assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1);
 		
-		// Read pre-computed negative, 250.38 MHz
+		// Read pre-computed negative, 263.78 MHz
 		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data_c[(i+1)*hob-1:i*hob];
 	end
 endgenerate
