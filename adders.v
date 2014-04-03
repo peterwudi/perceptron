@@ -130,12 +130,13 @@ fullAdder s6_4_0 (.x(s5_res[4][0]),		.y(s5_cout[3][0]),	.cin(s5_cout[3][1]),	.s(
 halfAdder s6_5_0 (.x(s5_res[5][0]),		.y(s5_cout[4][0]), 								.s(s6_res[5]),	.cout(s6_cout[5]));
 
 // Stage 7 with a 2-bit adder in the end
-wire	[6:0] s7_res;
-assign s7_res[6:4] = {s6_res[5], s6_res[4]} + {s6_cout[4], s6_cout[3]};
+//wire	[6:0] s7_res;
+//assign s7_res[6:4] = {s6_res[5], s6_res[4]} + {s6_cout[4], s6_cout[3]};
 
-assign res = {s5_cout[5][0]|s6_cout[5]|s7_res[6], s7_res[5:4], s6_res[3], s5_res[2][0], s4_res[1][0], s3_res[0][0]};
+//assign res = {s5_cout[5][0]|s6_cout[5]|s7_res[6], s7_res[5:4], s6_res[3], s5_res[2][0], s4_res[1][0], s3_res[0][0]};
 
 //assign res =  s5_cout[5][0] | s6_cout[5] | (s6_res[5]&s6_cout[4]) | (s6_res[5]&s6_res[4]&s6_cout[3]) | (s6_res[4]&s6_cout[4]&s6_cout[3]);
+assign res =  {s5_cout[5][0] | s6_cout[5] | ((s6_res[5]|s6_cout[4]) &s6_res[4]&s6_cout[3]) | (&s6_cout[4]&s6_cout[5]), 6'b0};
 
 endmodule
 
