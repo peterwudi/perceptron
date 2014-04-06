@@ -73,11 +73,11 @@ wire									up_wen;
 localparam hob = 3;
 localparam lob = 8 - hob;
 
-wire	[hob*12-1:0]				lu_hob_data;
-wire	[hob*12-1:0]				lu_hob_data_c;
-wire	[hob*12-1:0]				up_hob_data;
-wire	[lob*12-1:0]				lu_lob_data;
-wire	[lob*12-1:0]				up_lob_data;
+wire	[hob*ghrSize-1:0]				lu_hob_data;
+wire	[hob*ghrSize-1:0]				lu_hob_data_c;
+wire	[hob*ghrSize-1:0]				up_hob_data;
+wire	[lob*ghrSize-1:0]				lu_lob_data;
+wire	[lob*ghrSize-1:0]				up_lob_data;
 
 wire	[31:0]						fetch_bpredictor_inst;
 
@@ -102,9 +102,9 @@ reg									ras_exc_dec;
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
 // TODO: This is fake, may need to implement the actual thing
-assign	up_hob_data		= execute_bpredictor_data[95:60];
-assign	up_hob_data_c	= execute_bpredictor_data[85:50];	// This is fake
-assign	up_lob_data		= execute_bpredictor_data[59:0];
+assign	up_hob_data		= execute_bpredictor_data[95:95-hob*ghrSize+1];
+assign	up_hob_data_c	= execute_bpredictor_data[85:95-hob*ghrSize+1];	// This is fake
+assign	up_lob_data		= execute_bpredictor_data[lob*ghrSize-1:0];
 
 
 // HOB table
@@ -372,7 +372,7 @@ genvar i;
 //endgenerate
 
 // Wallace tree-like structure
-wire [35:0]	wallaceInput;
+wire [hob*ghrSize-1:0]	wallaceInput;
 
 generate
 	for (i = 0; i < ghrSize; i = i + 1) begin: wallace
@@ -389,6 +389,10 @@ wallace_3bit_12 wallaceTree(
 	.res(perceptronSum)
 );
 
+//wallace_4bit_12 wallaceTree(
+//	.op(wallaceInput),
+//	.res(perceptronSum)
+//);
 
 //// DSP block approach, 127.91 MHz, not good...
 //multAdd multAdd0(
