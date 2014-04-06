@@ -136,6 +136,8 @@ halfAdder s6_5_0 (.x(s5_res[5][0]),		.y(s5_cout[4][0]), 								.s(s6_res[5]),	.
 //assign res = {s5_cout[5][0]|s6_cout[5]|s7_res[6], s7_res[5:4], s6_res[3], s5_res[2][0], s4_res[1][0], s3_res[0][0]};
 
 //assign res =  s5_cout[5][0] | s6_cout[5] | (s6_res[5]&s6_cout[4]) | (s6_res[5]&s6_res[4]&s6_cout[3]) | (s6_res[4]&s6_cout[4]&s6_cout[3]);
+
+// Carry look-ahead
 assign res =  {s5_cout[5][0] | s6_cout[5] | ((s6_res[5]|s6_cout[4]) &s6_res[4]&s6_cout[3]) | (&s6_cout[4]&s6_cout[5]), 6'b0};
 
 endmodule
@@ -258,7 +260,7 @@ halfAdder s5_4_1 (.x(s4_cout[3][0]),	.y(s4_cout[3][1]), 								.s(s5_res[4][1])
 
 fullAdder s5_5_0 (.x(s4_res[5][0]),		.y(s4_cout[4][0]),	.cin(s4_cout[4][1]),	.s(s5_res[5][0]), .cout(s5_cout[5][0]));
 
-halfAdder s5_6_0 (.x(s4_res[6][0]),		.y(s4_cout[5][0]), 								.s(s5_res[5][0]),	.cout(s5_cout[6][0]));
+halfAdder s5_6_0 (.x(s4_res[6][0]),		.y(s4_cout[5][0]), 								.s(s5_res[6][0]),	.cout(s5_cout[6][0]));
 
 // Stage 6
 wire	[1:0]	s6_res	[6:0];
@@ -286,10 +288,8 @@ fullAdder s7_5_0 (.x(s6_res[5][0]),		.y(s6_cout[4][0]),	.cin(s6_cout[4][1]),	.s(
 
 halfAdder s7_6_0 (.x(s6_res[6]),			.y(s6_cout[5]),									.s(s7_res[6]),	.cout(s7_cout[6]));
 
-// Stage 8 with a 2-bit adder in the end
-//wire	[7:0] s8_res;
-//assign s8_res[6:5] = {s7_res[6], s7_res[5]} + {s7_cout[5], s7_cout[4]};
-
+// Stage 8
+// Carry look-ahead
 assign res = {s5_cout[6][0] | s6_cout[6][0] | s7_cout[6] | ((s7_res[6]|s7_cout[5]) &s7_res[5]&s7_cout[4]) | (&s7_cout[5]&s7_cout[6]), 7'b0};
 
 endmodule

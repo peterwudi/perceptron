@@ -70,7 +70,7 @@ reg	[63:0]						hit_count;
 // 64 entries for now
 wire									up_wen;
 
-localparam hob = 3;
+localparam hob = 4;
 localparam lob = 8 - hob;
 
 wire	[hob*ghrSize-1:0]				lu_hob_data;
@@ -317,11 +317,16 @@ end
 //=====================================
 
 wire					perceptronRes;	
-wire signed	[6:0]	perceptronSum;
+wire signed	[9:0]	perceptronSum;
+
 wire signed	[6:0]	perRes_lvl1 [5:0];
 wire signed [6:0]	perRes_lvl2 [2:0];
 
-assign	perceptronRes = ~perceptronSum[6];
+// For 3-bit
+//assign	perceptronRes = ~perceptronSum[6];
+
+// For 4-bit
+assign	perceptronRes = ~perceptronSum[7];
 
 // Calculate perceptron
 genvar i;
@@ -384,15 +389,17 @@ generate
 	end
 endgenerate
 
-wallace_3bit_12 wallaceTree(
-	.op(wallaceInput),
-	.res(perceptronSum)
-);
-
-//wallace_4bit_12 wallaceTree(
+// 254.71 MHz
+//wallace_3bit_12 wallaceTree(
 //	.op(wallaceInput),
-//	.res(perceptronSum)
+//	.res(perceptronSum[6:0])
 //);
+
+// 233.64 MHz
+wallace_4bit_12 wallaceTree(
+	.op(wallaceInput),
+	.res(perceptronSum[7:0])
+);
 
 //// DSP block approach, 127.91 MHz, not good...
 //multAdd multAdd0(
