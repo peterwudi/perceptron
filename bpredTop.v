@@ -16,8 +16,9 @@ module bpredTop(
 	input	[31:0]				execute_bpredictor_target,
 	input							execute_bpredictor_dir,
 	input							execute_bpredictor_miss,
+	
 	// Fake thing, implement this later
-	input	[95:0]				execute_bpredictor_data,
+	//input	[95:0]				execute_bpredictor_data,
 	
 	input	[31:0]				soin_bpredictor_debug_sel,
 
@@ -38,7 +39,6 @@ parameter ghrSize				= 12;
 fetch_bpredictor_PC is to be used before clock edge
 fetch_bpredictor_inst is to be used after clock edge
 */
-
 
 reg									branch_is;
 reg									target_computable;
@@ -73,11 +73,16 @@ wire									up_wen;
 localparam hob = 3;
 localparam lob = 8 - hob;
 
-wire	[hob*ghrSize-1:0]				lu_hob_data;
-wire	[hob*ghrSize-1:0]				lu_hob_data_c;
-wire	[hob*ghrSize-1:0]				up_hob_data;
-wire	[lob*ghrSize-1:0]				lu_lob_data;
-wire	[lob*ghrSize-1:0]				up_lob_data;
+wire	[hob*ghrSize-1:0]			lu_hob_data;
+reg	[hob*ghrSize-1:0]			lu_hob_data_r;
+wire	[hob*ghrSize-1:0]			lu_hob_data_c;
+reg	[hob*ghrSize-1:0]			up_hob_data;
+reg	[hob*ghrSize-1:0]			up_hob_data_c;
+
+wire	[lob*ghrSize-1:0]			lu_lob_data;
+reg	[lob*ghrSize-1:0]			lu_lob_data_r;
+reg	[lob*ghrSize-1:0]			up_lob_data;
+
 
 wire	[31:0]						fetch_bpredictor_inst;
 
@@ -101,11 +106,8 @@ reg									ras_exc_dec;
 
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
-// TODO: This is fake, may need to implement the actual thing
-assign	up_hob_data		= execute_bpredictor_data[95:95-hob*ghrSize+1];
-assign	up_hob_data_c	= execute_bpredictor_data[85:95-hob*ghrSize+1];	// This is fake
-assign	up_lob_data		= execute_bpredictor_data[lob*ghrSize-1:0];
-
+reg	[95:0]				execute_bpredictor_data		[1:0];
+reg	[95:0]				execute_bpredictor_data_c	[1:0];
 
 // HOB table
 hobRam hobTable(
@@ -444,14 +446,42 @@ wallace_3bit_12 wallaceTree(
 // Branch direction
 assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCall)) ? perceptronRes : 1'b0;
 
-// Update perceptron
-// Do this later
-//wire execute_bpredictor_update;
 
-// TODO: this is the old thing, which assumes that the update logic is somewhere else.
-// It might not be trivial for perceptron, but (1) it has 2 cycles before the branch is resolved,
-// and (2) it might not be required to have the update result written back immediately. So I don't
-// think it's going to be a big problem.
+// Update perceptron
+// The update logic should not affect fmax because (1) it has 2 cycles before the branch is resolved,
+// and (2) it might not be required to have the update result written back immediately.
+generate
+	for (i = 0; i < ghrSize; i = i + 1) begin: per_update
+		always @(posedge clk) begin
+			execute_bpredictor_data[0][(i+1)*8-1:i*8]
+				<= {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]} - 1;
+			execute_bpredictor_data[1][(i+1)*8-1:i*8]
+				<= {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]} + 1;
+			
+			execute_bpredictor_data_c[0][(i+1)*8-1:i*8]
+				<= 1 - {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]};
+			execute_bpredictor_data[1][(i+1)*8-1:i*8]
+				<= -'sd1 - {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]};
+		end
+	end
+	
+	always @(posedge clk) begin
+		lu_hob_data_r	<= lu_hob_data;
+		lu_lob_data_r	<= lu_lob_data;
+	
+		if (execute_bpredictor_miss == 1) begin
+			up_hob_data		<= execute_bpredictor_data[0][95:95-hob*ghrSize+1];
+			up_hob_data_c	<= execute_bpredictor_data_c[0][95:95-hob*ghrSize+1];
+			up_lob_data		<= execute_bpredictor_data[0][lob*ghrSize-1:0];
+		end
+		else begin
+			up_hob_data		<= execute_bpredictor_data[1][95:95-hob*ghrSize+1];
+			up_hob_data_c	<= execute_bpredictor_data_c[1][95:95-hob*ghrSize+1];
+			up_lob_data		<= execute_bpredictor_data[1][lob*ghrSize-1:0];
+		end
+	end
+endgenerate
+
 assign up_wen	= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
 
