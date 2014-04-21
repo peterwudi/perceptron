@@ -1,0 +1,88 @@
+-- Copyright (C) 1991-2013 Altera Corporation
+-- Your use of Altera Corporation's design tools, logic functions 
+-- and other software and tools, and its AMPP partner logic 
+-- functions, and any output files from any of the foregoing 
+-- (including device programming or simulation files), and any 
+-- associated documentation or information are expressly subject 
+-- to the terms and conditions of the Altera Program License 
+-- Subscription Agreement, Altera MegaCore Function License 
+-- Agreement, or other applicable license agreement, including, 
+-- without limitation, that your use is for the sole purpose of 
+-- programming logic devices manufactured by Altera and sold by 
+-- Altera or its authorized distributors.  Please refer to the 
+-- applicable agreement for further details.
+
+-- Quartus II generated Memory Initialization File (.mif)
+
+WIDTH=36;
+DEPTH=64;
+
+ADDRESS_RADIX=UNS;
+DATA_RADIX=UNS;
+
+CONTENT BEGIN
+	0   :   9817068105;
+	1   :   29451204315;
+	2   :   68719476735;
+	3   :   9817068105;
+	4   :   29451204315;
+	5   :   68719476735;
+	6   :   9817068105;
+	7   :   29451204315;
+	8   :   68719476735;
+	9   :   9817068105;
+	10  :   29451204315;
+	11  :   68719476735;
+	12  :   9817068105;
+	13  :   29451204315;
+	14  :   68719476735;
+	15  :   9817068105;
+	16  :   29451204315;
+	17  :   68719476735;
+	18  :   9817068105;
+	19  :   29451204315;
+	20  :   68719476735;
+	21  :   9817068105;
+	22  :   29451204315;
+	23  :   68719476735;
+	24  :   9817068105;
+	25  :   29451204315;
+	26  :   68719476735;
+	27  :   9817068105;
+	28  :   29451204315;
+	29  :   68719476735;
+	30  :   9817068105;
+	31  :   29451204315;
+	32  :   68719476735;
+	33  :   9817068105;
+	34  :   29451204315;
+	35  :   68719476735;
+	36  :   9817068105;
+	37  :   29451204315;
+	38  :   68719476735;
+	39  :   9817068105;
+	40  :   29451204315;
+	41  :   68719476735;
+	42  :   9817068105;
+	43  :   29451204315;
+	44  :   68719476735;
+	45  :   9817068105;
+	46  :   29451204315;
+	47  :   68719476735;
+	48  :   9817068105;
+	49  :   29451204315;
+	50  :   68719476735;
+	51  :   9817068105;
+	52  :   29451204315;
+	53  :   68719476735;
+	54  :   9817068105;
+	55  :   29451204315;
+	56  :   68719476735;
+	57  :   9817068105;
+	58  :   29451204315;
+	59  :   68719476735;
+	60  :   9817068105;
+	61  :   29451204315;
+	62  :   68719476735;
+	63  :   9817068105;
+END;
