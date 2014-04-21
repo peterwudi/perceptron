@@ -62,11 +62,6 @@ wire	[31:0]						OPERAND_IMM26;
 //wire	[1:0]						mem_data_w;
 //wire	[1:0]						mem_data_r;
 
-reg	[63:0]						lookup_count;
-reg	[63:0]						update_count;
-reg	[63:0]						miss_count;
-reg	[63:0]						hit_count;
-
 // 64 entries for now
 wire									up_wen;
 
@@ -85,8 +80,6 @@ reg	[lob*ghrSize-1:0]			up_lob_data;
 
 
 wire	[31:0]						fetch_bpredictor_inst;
-
-reg	[8:0]							reset_index;
 
 reg	[ghrSize-1:0]				GHR;
 
@@ -220,24 +213,6 @@ begin
 	isC_R		= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h != 6'h0d)))) ? 1 : 0;
 	isCall	= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h == 6'h1d)))) ? 1 : 0;
 end
-
-/*
-always@( * )
-begin
-	case (inst_opcode)
-		6'h00: begin target_computable	= 1;
-			isIMM16 = 0;
-		end
-		6'h01: begin target_computable	= 1;
-			isIMM16 = 0;
-		end
-		6'h3a: begin target_computable	= 0; end
-		default: begin target_computable	= 1;
-			isIMM16 = 1;
-		end
-	endcase
-end
-*/
 
 always@( * )
 begin
@@ -490,28 +465,13 @@ always@( * )
 begin
 	//SPEED
 	PC4									= PC4_r + 4;
-
-	case (soin_bpredictor_debug_sel[1:0])
-		2'b00: bpredictor_soin_debug	= lookup_count[31:0];
-		2'b01: bpredictor_soin_debug	= update_count[31:0];
-		2'b10: bpredictor_soin_debug	= miss_count[31:0];
-		2'b11: bpredictor_soin_debug	= hit_count[31:0];
-		default: bpredictor_soin_debug	= -1;
-	endcase
 end
 
 always@(posedge clk) begin
 	if (reset) begin
-		lookup_count		<= 0;
-		update_count		<= 0;
-		miss_count			<= 0;
-		hit_count			<= 0;
 		GHR					<= 'b0;
 		
-		if (reset) begin
-			reset_index		<= reset_index + 1;
-		end
-		else begin
+		if (!reset) begin
 			PCH4				<= fetch_bpredictor_PC[31:28];
 			PC4_r				<= fetch_bpredictor_PC;
 		
@@ -534,16 +494,6 @@ always@(posedge clk) begin
 			end
 			else if (ras_dec) begin
 				ras_top <= ras_top - 1;
-			end
-			
-			if (!soin_bpredictor_stall) begin
-				lookup_count				<= lookup_count + 1;
-			end
-			
-			if (execute_bpredictor_update) begin
-				update_count			<= update_count + 1;
-				miss_count				<= miss_count + execute_bpredictor_miss;
-				hit_count				<= hit_count + (execute_bpredictor_miss ? 0 : 1'b1);
 			end
 		end
 	end
