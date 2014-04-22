@@ -6,6 +6,9 @@ reg					insnMem_wren = 1'b0;
 reg	[31:0]		insnMem_data_w = 32'b0;
 reg	[7:0]			insnMem_addr_w = 8'b11111111;
 reg	[31:0]		fetch_bpredictor_PC;
+reg					fetch_redirect = 0;
+reg	[31:0]		fetch_redirect_PC = 'b0;
+
 
 reg					soin_bpredictor_stall = 1'b0;
 
@@ -20,13 +23,10 @@ reg	[95:0]		execute_bpredictor_data = 'hFFFF;
 	
 reg	[31:0]		soin_bpredictor_debug_sel = 2'b00;
 
-reg					execute_missPred = 1'b0;
-reg					execute_c_r_after_r = 1'b0;
-reg					execute_isCall = 1'b0;
-
 reg					reset = 1'b0;
-	
-wire	[31:0]		bpredictor_soin_debug;
+reg					execute_bpredictor_recover_ras = 0;
+reg	[3:0]			execute_bpredictor_meta = 'b0;
+
 
 
 bpredTop dut(.*);

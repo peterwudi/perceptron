@@ -22,29 +22,27 @@ insnMem insnMem(
 endmodule
 
 
-module soin_bpredictor_ras(
+module ras(
 	input								clk,
 
-	input	[31:0]						f_PC4,
+	input	[31:0]					f_PC4,
 	input								f_call,
 	input								f_ret,
 
 	input								e_recover,
 	input	[3:0]						e_recover_index,
 	
-	output	reg [3:0]					ras_index,
-	output	[31:0]						top_addr
+	output	reg [3:0]			ras_index,
+	output	[31:0]				top_addr
 );
 
 MLAB_32_4 ras(
-	.clock								(clk),
+	.clock							(clk),
 	.address							(ras_index),
 	.q									(top_addr),
 	.data								(e_recover_index),
 	.wren								(f_call)
 );
-
-//reg		[31:0]							ras					[15:0];
 
 always@(posedge clk)
 begin
@@ -53,15 +51,12 @@ begin
 	else
 	if (f_call)
 	begin
-//		ras[ras_index]					<= f_PC4;
 		ras_index						<= ras_index + 4'h1;
 	end
 	else
 	if (f_ret)
 		ras_index						<= ras_index - 4'h1;
 end
-
-//assign top_addr							= ras[ras_index];
 
 endmodule
 
@@ -73,6 +68,9 @@ module bpredTop(
 	input wire	[31:0]		insnMem_data_w,
 	input wire	[7:0]			insnMem_addr_w,
 	output reg	[31:0]		fetch_bpredictor_PC,
+	
+	input							fetch_redirect,
+	input	[31:0]				fetch_redirect_PC,
 
 	input							soin_bpredictor_stall,
 
@@ -83,20 +81,10 @@ module bpredTop(
 	input	[31:0]				execute_bpredictor_target,
 	input							execute_bpredictor_dir,
 	input							execute_bpredictor_miss,
+	input							execute_bpredictor_recover_ras,
+	input	[3:0]					execute_bpredictor_meta,
 	
-	// Fake thing, implement this later
-	//input	[95:0]				execute_bpredictor_data,
-	
-	input	[31:0]				soin_bpredictor_debug_sel,
-
-	input							execute_missPred,
-	input							execute_c_r_after_r,	// Call or Return after return
-	input							execute_isCall,
-
-	input							reset,
-	
-	
-	output reg [31:0]			bpredictor_soin_debug
+	input							reset
 );
 
 parameter perceptronSize	= 64;
@@ -150,18 +138,32 @@ wire	[31:0]						fetch_bpredictor_inst;
 
 reg	[ghrSize-1:0]				GHR;
 
-reg									isC_R;	// determines if it is a call or return
+reg									isRet;	// determines if it is a return
 reg									isCall;	// determines if it is a call
 
-// RAS
-(* ramstyle = "MLAB,no_rw_check" *) 
-reg	[31:0]						ras [15:0];
+// Predecoding
+reg	[1:0]							is_p_mux;
+reg									is_p_uncond;
+reg									is_p_ret;
+reg									is_p_call;
 
-reg	[3:0]							ras_top;
-reg									ras_dec;
-reg									ras_inc;
-reg									ras_exc_inc;
-reg									ras_exc_dec;
+// RAS
+wire	[3:0]							ras_index;
+wire	[3:0]							ras_top_addr;
+
+ras ras_inst(
+	.clk								(clk),
+
+	.f_PC4							(PC4),
+	.f_call							(isCall),
+	.f_ret							(isRet),
+
+	.e_recover						(execute_bpredictor_recover_ras),
+	.e_recover_index				(execute_bpredictor_meta),
+
+	.ras_index						(ras_index),
+	.top_addr						(ras_top_addr)
+);
 
 
 wire [31:0] execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
@@ -224,22 +226,9 @@ integer j;
 
 initial begin
 	fetch_bpredictor_PC <= 32'h0;
-	computed_target16 = 0;
-	computed_target26 = 0;
 	PC4_r <= 0;
 	PCH4 = 0;
 	PC4 <= 4;
-	
-	branch_is <= 0;
-	isCall <= 0;
-	ras_top <= 0;
-	
-	GHR <= 'b1;
-	
-	for (j = 0; j < 16; j = j + 1)
-	begin
-		ras[j] <= 32'b0;
-	end
 end
 
 
@@ -273,13 +262,21 @@ begin
 			endcase
 		end
 		default: begin branch_is		= 0;
-							isC_R				= 0;
 		end
 	endcase
+	
 	target_computable = branch_is & (inst_opcode < 6'h3a);
 	isIMM16	= (inst_opcode <= 6'h01) ? 0 : 1;
-	isC_R		= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h != 6'h0d)))) ? 1 : 0;
-	isCall	= (branch_is && (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h == 6'h1d)))) ? 1 : 0;
+	
+	// Regular
+	isRet		= (inst_opcode == 6'h3A) & (inst_opcode_x_h == 6'h05);
+	isCall	= (inst_opcode == 6'h00 || ((inst_opcode == 6'h3a) && (inst_opcode_x_h == 6'h1d)));
+
+	// Predecoding
+	is_p_mux		= fetch_bpredictor_inst[31:30];
+	is_p_uncond = fetch_bpredictor_inst[29];
+	is_p_ret		= (inst_opcode == 6'h3A) & (inst_opcode_x_h == 6'h05);
+	is_p_call	= fetch_bpredictor_inst[27];
 end
 
 always@( * )
@@ -288,64 +285,21 @@ begin
 	computed_target26 = OPERAND_IMM26;
 end
 
-always @( * )
-begin
-	if (isC_R) begin
-		if (isCall) begin
-			// Push PC+4 on RAS
-			ras_inc		 <= 1;
-			ras_dec		 <= 0;
-		end
-		else begin
-			// Pop RAS
-			ras_dec		 <= 1;
-			ras_inc		 <= 0;
-		end
-	end
-	else begin
-		ras_inc		<= 0;
-		ras_dec		<= 0;
-	end
-
-	case ({execute_missPred, execute_c_r_after_r, execute_isCall})
-		3'b110: begin
-			if (isC_R && isCall) begin
-				ras_exc_inc <= 0;
-				ras_exc_dec <= 1;
-			end
-			else begin
-				ras_exc_inc <= 1;
-				ras_exc_dec <= 0;
-			end
-		end
-		3'b111: begin
-			if (isC_R && isCall) begin
-				ras_exc_inc <= 0;
-				ras_exc_dec <= 1;
-			end
-			else begin
-				ras_exc_inc <= 1;
-				ras_exc_dec <= 0;
-			end
-		end
-		default: begin
-			ras_exc_inc <= 0;
-			ras_exc_dec <= 0;
-		end
-	endcase
-end
 
 // Output Mux
 always@(*)
 begin
+	if (fetch_redirect) begin
+		fetch_bpredictor_PC = fetch_redirect_PC;
+	end
 	if (~bpredictor_fetch_p_dir) begin
 		// Not taken or indirect call, the target is not computable
 		fetch_bpredictor_PC = PC4;
 	end
 	else begin
-		if (isC_R & ~isCall) begin
+		if (isRet) begin
 			// return, use the stack
-			fetch_bpredictor_PC = ras[ras_top+1];
+			fetch_bpredictor_PC = ras_top_addr;
 		end
 		else if (target_computable & isIMM16) begin
 			fetch_bpredictor_PC = computed_target16;
@@ -354,6 +308,34 @@ begin
 			fetch_bpredictor_PC = computed_target26;
 		end
 	end
+	
+	/*
+	casex ({fetch_redirect, is_p_mux & {2{is_p_uncond | p_taken}}})
+		3'b1xx:
+		begin
+			p_target					= fetch_redirect_PC;
+		end
+		3'b000:
+		begin
+			p_target					= PC4;
+		end
+		3'b001:
+		begin
+			p_target					= ras_top_addr;
+		end
+		3'b010:
+		begin
+			p_target					= TARGET_IMM16S;
+		end
+		3'b011:
+		begin
+			p_target					= TARGET_IMM26;
+		end
+	endcase
+
+*/
+	
+	
 end
 
 
@@ -487,8 +469,7 @@ wallace_3bit_12 wallaceTree(
 
 
 // Branch direction
-assign bpredictor_fetch_p_dir	= branch_is & (target_computable | (isC_R & ~isCall)) ? perceptronRes : 1'b0;
-
+assign bpredictor_fetch_p_dir	= branch_is & (target_computable | isRet | isCall) & perceptronRes;
 
 // Update perceptron
 // The update logic should not affect fmax because (1) it has 2 cycles before the branch is resolved,
@@ -531,40 +512,25 @@ assign up_wen	= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
 always@( * )
 begin
-	//SPEED
-	PC4									= PC4_r + 4;
+	PC4					= PC4_r + 4;
 end
 
-always@(posedge clk) begin
-	if (reset) begin
-		GHR					<= 'b0;
+always@(posedge clk)
+begin
+	if (reset)
+	begin
+		GHR							<= 0;
+	end
+	else
+	begin
+		PCH4				<= fetch_bpredictor_PC[31:28];
+		PC4_r				<= fetch_bpredictor_PC;
 		
-		if (!reset) begin
-			PCH4				<= fetch_bpredictor_PC[31:28];
-			PC4_r				<= fetch_bpredictor_PC;
-		
-			GHR				<= {execute_bpredictor_dir, GHR[ghrSize-1:1]};
-		
-			//RAS
-			if (isC_R && isCall)
-			begin
-				ras[ras_top] <= PC4;
-			end
-
-			if (ras_exc_inc) begin
-				ras_top <= ras_top + 1;
-			end
-			else if (ras_exc_dec) begin
-				ras_top <= ras_top - 1;
-			end
-			else if (ras_inc) begin
-				ras_top <= ras_top + 1;
-			end
-			else if (ras_dec) begin
-				ras_top <= ras_top - 1;
-			end
+		if (execute_bpredictor_update) begin
+			GHR							<= {GHR[6:0], execute_bpredictor_dir};
 		end
 	end
 end
+
 
 endmodule
