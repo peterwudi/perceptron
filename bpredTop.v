@@ -1,5 +1,72 @@
 `include "header.v"
 
+
+module insnCache(
+	input						clk,
+	input		[31:0]		insnMem_data_w,
+	input		[31:0]		fetch_bpredictor_PC,
+	input		[7:0]			insnMem_addr_w,
+	input 					insnMem_wren,
+	output	[31:0]		fetch_bpredictor_inst
+);
+
+insnMem insnMem(
+	.clock(clk),
+	.data(insnMem_data_w),
+	.rdaddress(fetch_bpredictor_PC[9:2]),		// using PC[9:2]!
+	.wraddress(insnMem_addr_w),
+	.wren(insnMem_wren),
+	.q(fetch_bpredictor_inst)
+);
+
+endmodule
+
+
+module soin_bpredictor_ras(
+	input								clk,
+
+	input	[31:0]						f_PC4,
+	input								f_call,
+	input								f_ret,
+
+	input								e_recover,
+	input	[3:0]						e_recover_index,
+	
+	output	reg [3:0]					ras_index,
+	output	[31:0]						top_addr
+);
+
+MLAB_32_4 ras(
+	.clock								(clk),
+	.address							(ras_index),
+	.q									(top_addr),
+	.data								(e_recover_index),
+	.wren								(f_call)
+);
+
+//reg		[31:0]							ras					[15:0];
+
+always@(posedge clk)
+begin
+	if (e_recover)
+		ras_index						<= e_recover_index;
+	else
+	if (f_call)
+	begin
+//		ras[ras_index]					<= f_PC4;
+		ras_index						<= ras_index + 4'h1;
+	end
+	else
+	if (f_ret)
+		ras_index						<= ras_index - 4'h1;
+end
+
+//assign top_addr							= ras[ras_index];
+
+endmodule
+
+
+
 module bpredTop(
 	input	wire					clk,
 	input wire					insnMem_wren,
@@ -142,15 +209,16 @@ assign inst_opcode_x_h	= fetch_bpredictor_inst[16:11];
 assign OPERAND_IMM16S	= {{16{fetch_bpredictor_inst[21]}}, fetch_bpredictor_inst[21:6]};
 assign OPERAND_IMM26		= {PCH4, fetch_bpredictor_inst[31:6], 2'b00};
 
-// Instruction Memory
-insnMem insnMem(
-	.clock(clk),
-	.data(insnMem_data_w),
-	.rdaddress(fetch_bpredictor_PC[9:2]),		// using PC[9:2]!
-	.wraddress(insnMem_addr_w),
-	.wren(insnMem_wren),
-	.q(fetch_bpredictor_inst)
+// ICache, this is a wrapper so the logic here is not included in area
+insnCache iCache(
+	.clk(clk),
+	.insnMem_data_w(insnMem_data_w),
+	.fetch_bpredictor_PC(fetch_bpredictor_PC[9:2]),		// using PC[9:2]!
+	.insnMem_addr_w(insnMem_addr_w),
+	.insnMem_wren(insnMem_wren),
+	.fetch_bpredictor_inst(fetch_bpredictor_inst)
 );
+
 
 integer j;
 
@@ -294,7 +362,7 @@ end
 //=====================================
 
 wire					perceptronRes;	
-wire signed	[9:0]	perceptronSum;
+wire signed	[6:0]	perceptronSum;
 
 wire signed	[6:0]	perRes_lvl1 [5:0];
 wire signed [6:0]	perRes_lvl2 [2:0];
