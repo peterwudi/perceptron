@@ -40,8 +40,10 @@ end
 initial begin 
 	$timeformat(-9, 1, " ns", 6); 
 	clk = 1'b0;    // time = 0
-
+	reset = 1'b1;
 	
+	@(negedge clk);
+	reset = 1'b0;
 	for (int i = 0; i < 32; i++) begin
 		@(negedge clk);
 	end

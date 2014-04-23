@@ -99,7 +99,7 @@ module lobRam (
 		altsyncram_component.operation_mode = "DUAL_PORT",
 		altsyncram_component.outdata_aclr_b = "NONE",
 		altsyncram_component.outdata_reg_b = "CLOCK0",
-		altsyncram_component.power_up_uninitialized = "TRUE",
+		altsyncram_component.power_up_uninitialized = "FALSE",
 		altsyncram_component.ram_block_type = "MLAB",
 		altsyncram_component.read_during_write_mode_mixed_ports = "CONSTRAINED_DONT_CARE",
 		altsyncram_component.widthad_a = 6,
@@ -139,7 +139,7 @@ endmodule
 // Retrieval info: PRIVATE: INDATA_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: INDATA_REG_B NUMERIC "0"
 // Retrieval info: PRIVATE: INIT_FILE_LAYOUT STRING "PORT_B"
-// Retrieval info: PRIVATE: INIT_TO_SIM_X NUMERIC "1"
+// Retrieval info: PRIVATE: INIT_TO_SIM_X NUMERIC "0"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Stratix IV"
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
@@ -186,7 +186,7 @@ endmodule
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "DUAL_PORT"
 // Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"
 // Retrieval info: CONSTANT: OUTDATA_REG_B STRING "CLOCK0"
-// Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "TRUE"
+// Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "FALSE"
 // Retrieval info: CONSTANT: RAM_BLOCK_TYPE STRING "MLAB"
 // Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_MIXED_PORTS STRING "CONSTRAINED_DONT_CARE"
 // Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "6"
