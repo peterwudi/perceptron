@@ -422,10 +422,10 @@ wire signed	[6:0]	perceptronSum;
 wire signed	[6:0]	perRes_lvl1 [5:0];
 wire signed [6:0]	perRes_lvl2 [2:0];
 
-// For 3-bit
+// For 3-bit 12 GHR bits
 assign	perceptronRes = ~perceptronSum[6];
 
-// For 4-bit
+// For 4-bit 12 GHR bits
 //assign	perceptronRes = ~perceptronSum[7];
 
 // Calculate perceptron
@@ -540,12 +540,16 @@ wallace_3bit_12 wallaceTree(
 //	
 //assign	perceptronSum = perRes_lvl2[0] + perRes_lvl2[1] + perRes_lvl2[2];
 
+`ifdef PreDecode
+// Predecoding branch direction
+assign bpredictor_fetch_p_dir = is_p_uncond | perceptronRes;
+
+`else
 
 // Regurlar branch direction
 assign bpredictor_fetch_p_dir	= is_branch & (is_cond | is_ret | is_call) & perceptronRes;
 
-// Predecoding branch direction
-//assign bpredictor_fetch_p_dir = is_p_uncond | perceptronRes;
+`endif
 
 
 // Update perceptron
