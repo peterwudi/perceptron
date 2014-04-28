@@ -186,7 +186,7 @@ module bpredTop(
 );
 
 parameter perceptronSize	= 64;
-parameter ghrSize				= 12;
+parameter ghrSize				= 8;
 
 /*
 fetch_bpredictor_PC is to be used before clock edge
@@ -264,8 +264,8 @@ ras ras_inst(
 
 wire	[31:0] 	execute_bpredictor_PC	= execute_bpredictor_PC4 - 4;
 
-reg	[95:0]	execute_bpredictor_data		[1:0];
-reg	[95:0]	execute_bpredictor_data_c	[1:0];
+reg	[ghrSize*8-1:0]	execute_bpredictor_data		[1:0];
+reg	[ghrSize*8-1:0]	execute_bpredictor_data_c	[1:0];
 
 // HOB table
 hobRam hobTable(
@@ -417,13 +417,16 @@ end
 //=====================================
 
 wire					perceptronRes;	
-wire signed	[6:0]	perceptronSum;
+wire signed	[5:0]	perceptronSum;
 
 wire signed	[6:0]	perRes_lvl1 [5:0];
 wire signed [6:0]	perRes_lvl2 [2:0];
 
 // For 3-bit 12 GHR bits
-assign	perceptronRes = ~perceptronSum[6];
+assign	perceptronRes = ~perceptronSum[5];
+
+// For 3-bit 12 GHR bits
+//assign	perceptronRes = ~perceptronSum[6];
 
 // For 4-bit 12 GHR bits
 //assign	perceptronRes = ~perceptronSum[7];
@@ -490,9 +493,14 @@ generate
 endgenerate
 
 // 254.71 MHz
-wallace_3bit_12 wallaceTree(
+//wallace_3bit_12 wallaceTree(
+//	.op(wallaceInput),
+//	.res(perceptronSum[6:0])
+//);
+
+wallace_3bit_8 wallaceTree(
 	.op(wallaceInput),
-	.res(perceptronSum[6:0])
+	.res(perceptronSum[5:0])
 );
 
 // 233.64 MHz
@@ -575,13 +583,13 @@ generate
 		lu_lob_data_r	<= lu_lob_data;
 	
 		if (execute_bpredictor_miss == 1) begin
-			up_hob_data		<= execute_bpredictor_data[0][95:95-hob*ghrSize+1];
-			up_hob_data_c	<= execute_bpredictor_data_c[0][95:95-hob*ghrSize+1];
+			up_hob_data		<= execute_bpredictor_data[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+			up_hob_data_c	<= execute_bpredictor_data_c[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
 			up_lob_data		<= execute_bpredictor_data[0][lob*ghrSize-1:0];
 		end
 		else begin
-			up_hob_data		<= execute_bpredictor_data[1][95:95-hob*ghrSize+1];
-			up_hob_data_c	<= execute_bpredictor_data_c[1][95:95-hob*ghrSize+1];
+			up_hob_data		<= execute_bpredictor_data[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+			up_hob_data_c	<= execute_bpredictor_data_c[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
 			up_lob_data		<= execute_bpredictor_data[1][lob*ghrSize-1:0];
 		end
 	end
@@ -606,7 +614,7 @@ begin
 		PC4_r				<= fetch_bpredictor_PC;
 		
 		if (execute_bpredictor_update) begin
-			GHR							<= {GHR[6:0], execute_bpredictor_dir};
+			GHR			<= {GHR[ghrSize-1:0], execute_bpredictor_dir};
 		end
 	end
 end
