@@ -270,8 +270,8 @@ reg	[ghrSize*8-1:0]	execute_bpredictor_data_c	[1:0];
 hobRam hobTable(
 	.clock(clk),
 	.data(up_hob_data),
-	.rdaddress(fetch_bpredictor_PC[7:2]),
-	.wraddress(execute_bpredictor_PC[7:2]),
+	.rdaddress(fetch_bpredictor_PC[9:2]),
+	.wraddress(execute_bpredictor_PC[9:2]),
 	.wren(up_wen),
 	.q(lu_hob_data)
 );
@@ -280,8 +280,8 @@ hobRam hobTable(
 hobRam hobTable_c(
 	.clock(clk),
 	.data(up_hob_data_c),
-	.rdaddress(fetch_bpredictor_PC[7:2]),
-	.wraddress(execute_bpredictor_PC[7:2]),
+	.rdaddress(fetch_bpredictor_PC[9:2]),
+	.wraddress(execute_bpredictor_PC[9:2]),
 	.wren(up_wen),
 	.q(lu_hob_data_c)
 );
@@ -291,8 +291,8 @@ hobRam hobTable_c(
 lobRam lobTable(
 	.clock(clk),
 	.data(up_lob_data),
-	.rdaddress(fetch_bpredictor_PC[7:2]),
-	.wraddress(execute_bpredictor_PC[7:2]),
+	.rdaddress(fetch_bpredictor_PC[9:2]),
+	.wraddress(execute_bpredictor_PC[9:2]),
 	.wren(up_wen),
 	.q(lu_lob_data)
 );

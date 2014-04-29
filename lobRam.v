@@ -46,8 +46,8 @@ module lobRam (
 
 	input	  clock;
 	input	[79:0]  data;
-	input	[5:0]  rdaddress;
-	input	[5:0]  wraddress;
+	input	[7:0]  rdaddress;
+	input	[7:0]  wraddress;
 	input	  wren;
 	output	[79:0]  q;
 `ifndef ALTERA_RESERVED_QIS
@@ -94,16 +94,16 @@ module lobRam (
 		altsyncram_component.clock_enable_output_b = "BYPASS",
 		altsyncram_component.intended_device_family = "Stratix IV",
 		altsyncram_component.lpm_type = "altsyncram",
-		altsyncram_component.numwords_a = 64,
-		altsyncram_component.numwords_b = 64,
+		altsyncram_component.numwords_a = 256,
+		altsyncram_component.numwords_b = 256,
 		altsyncram_component.operation_mode = "DUAL_PORT",
 		altsyncram_component.outdata_aclr_b = "NONE",
 		altsyncram_component.outdata_reg_b = "CLOCK0",
 		altsyncram_component.power_up_uninitialized = "FALSE",
 		altsyncram_component.ram_block_type = "MLAB",
 		altsyncram_component.read_during_write_mode_mixed_ports = "CONSTRAINED_DONT_CARE",
-		altsyncram_component.widthad_a = 6,
-		altsyncram_component.widthad_b = 6,
+		altsyncram_component.widthad_a = 8,
+		altsyncram_component.widthad_b = 8,
 		altsyncram_component.width_a = 80,
 		altsyncram_component.width_b = 80,
 		altsyncram_component.width_byteena_a = 1;
@@ -144,7 +144,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "5120"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "20480"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
 // Retrieval info: PRIVATE: MIFfilename STRING ""
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
@@ -181,27 +181,27 @@ endmodule
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_B STRING "BYPASS"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Stratix IV"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
-// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "64"
-// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "64"
+// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "256"
+// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "256"
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "DUAL_PORT"
 // Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"
 // Retrieval info: CONSTANT: OUTDATA_REG_B STRING "CLOCK0"
 // Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "FALSE"
 // Retrieval info: CONSTANT: RAM_BLOCK_TYPE STRING "MLAB"
 // Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_MIXED_PORTS STRING "CONSTRAINED_DONT_CARE"
-// Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "6"
-// Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "6"
+// Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "8"
+// Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "8"
 // Retrieval info: CONSTANT: WIDTH_A NUMERIC "80"
 // Retrieval info: CONSTANT: WIDTH_B NUMERIC "80"
 // Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
 // Retrieval info: USED_PORT: data 0 0 80 0 INPUT NODEFVAL "data[79..0]"
 // Retrieval info: USED_PORT: q 0 0 80 0 OUTPUT NODEFVAL "q[79..0]"
-// Retrieval info: USED_PORT: rdaddress 0 0 6 0 INPUT NODEFVAL "rdaddress[5..0]"
-// Retrieval info: USED_PORT: wraddress 0 0 6 0 INPUT NODEFVAL "wraddress[5..0]"
+// Retrieval info: USED_PORT: rdaddress 0 0 8 0 INPUT NODEFVAL "rdaddress[7..0]"
+// Retrieval info: USED_PORT: wraddress 0 0 8 0 INPUT NODEFVAL "wraddress[7..0]"
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT GND "wren"
-// Retrieval info: CONNECT: @address_a 0 0 6 0 wraddress 0 0 6 0
-// Retrieval info: CONNECT: @address_b 0 0 6 0 rdaddress 0 0 6 0
+// Retrieval info: CONNECT: @address_a 0 0 8 0 wraddress 0 0 8 0
+// Retrieval info: CONNECT: @address_b 0 0 8 0 rdaddress 0 0 8 0
 // Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
 // Retrieval info: CONNECT: @data_a 0 0 80 0 data 0 0 80 0
 // Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0
