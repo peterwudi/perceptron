@@ -294,7 +294,7 @@ endmodule
 
 module wallace_3bit_8(
 	input		[23:0] 	op,
-	output	[6:0]		res
+	output	[5:0]		res
 );
 
 // Even if 7x8 = 56, so bit 5 is at most one, no need to have an
@@ -365,11 +365,11 @@ wire	[5:0] s5_res;
 
 // Bits 0-2 done
 
-assign s5_res[5:3] = {s4_res[4], s4_res[3]} + {s4_cout[3], s4_cout[2]};
-assign res = {s4_cout[4]|s5_res[5], s5_res[4:3], s4_res[2], s3_res[1], s2_res[0]};
+//assign s5_res[5:3] = {s4_res[4], s4_res[3]} + {s4_cout[3], s4_cout[2]};
+//assign res = {s4_cout[4]|s5_res[5], s5_res[4:3], s4_res[2], s3_res[1], s2_res[0]};
 
-// Carry look-ahead, only produce bit 6.
-//assign res =  {s5_cout[5][0] | s6_cout[5] | ((s6_res[5]|s6_cout[4]) &s6_res[4]&s6_cout[3]) | (&s6_cout[4]&s6_cout[5]), 6'b0};
+// Carry look-ahead, only produce bit 5.
+assign res =  {s4_cout[4]|(s4_res[4]&s4_cout[3])|(s4_res[4]&s4_res[3]&(s4_cout[3]|s4_cout[2]))|(s4_cout[3]&s4_cout[2]&(s4_res[4]|s4_res[3])), 5'b0};
 
 endmodule
 

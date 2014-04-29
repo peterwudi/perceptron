@@ -45,11 +45,11 @@ module lobRam (
 	q);
 
 	input	  clock;
-	input	[39:0]  data;
+	input	[79:0]  data;
 	input	[5:0]  rdaddress;
 	input	[5:0]  wraddress;
 	input	  wren;
-	output	[39:0]  q;
+	output	[79:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -59,8 +59,8 @@ module lobRam (
 // synopsys translate_on
 `endif
 
-	wire [39:0] sub_wire0;
-	wire [39:0] q = sub_wire0[39:0];
+	wire [79:0] sub_wire0;
+	wire [79:0] q = sub_wire0[79:0];
 
 	altsyncram	altsyncram_component (
 				.address_a (wraddress),
@@ -80,7 +80,7 @@ module lobRam (
 				.clocken1 (1'b1),
 				.clocken2 (1'b1),
 				.clocken3 (1'b1),
-				.data_b ({40{1'b1}}),
+				.data_b ({80{1'b1}}),
 				.eccstatus (),
 				.q_a (),
 				.rden_a (1'b1),
@@ -104,8 +104,8 @@ module lobRam (
 		altsyncram_component.read_during_write_mode_mixed_ports = "CONSTRAINED_DONT_CARE",
 		altsyncram_component.widthad_a = 6,
 		altsyncram_component.widthad_b = 6,
-		altsyncram_component.width_a = 40,
-		altsyncram_component.width_b = 40,
+		altsyncram_component.width_a = 80,
+		altsyncram_component.width_b = 80,
 		altsyncram_component.width_byteena_a = 1;
 
 
@@ -144,7 +144,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "2560"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "5120"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
 // Retrieval info: PRIVATE: MIFfilename STRING ""
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
@@ -164,10 +164,10 @@ endmodule
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
 // Retrieval info: PRIVATE: UseDPRAM NUMERIC "1"
 // Retrieval info: PRIVATE: VarWidth NUMERIC "0"
-// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "40"
-// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "40"
-// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "40"
-// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "40"
+// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "80"
+// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "80"
+// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "80"
+// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "80"
 // Retrieval info: PRIVATE: WRADDR_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
@@ -191,21 +191,21 @@ endmodule
 // Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_MIXED_PORTS STRING "CONSTRAINED_DONT_CARE"
 // Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "6"
 // Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "6"
-// Retrieval info: CONSTANT: WIDTH_A NUMERIC "40"
-// Retrieval info: CONSTANT: WIDTH_B NUMERIC "40"
+// Retrieval info: CONSTANT: WIDTH_A NUMERIC "80"
+// Retrieval info: CONSTANT: WIDTH_B NUMERIC "80"
 // Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
-// Retrieval info: USED_PORT: data 0 0 40 0 INPUT NODEFVAL "data[39..0]"
-// Retrieval info: USED_PORT: q 0 0 40 0 OUTPUT NODEFVAL "q[39..0]"
+// Retrieval info: USED_PORT: data 0 0 80 0 INPUT NODEFVAL "data[79..0]"
+// Retrieval info: USED_PORT: q 0 0 80 0 OUTPUT NODEFVAL "q[79..0]"
 // Retrieval info: USED_PORT: rdaddress 0 0 6 0 INPUT NODEFVAL "rdaddress[5..0]"
 // Retrieval info: USED_PORT: wraddress 0 0 6 0 INPUT NODEFVAL "wraddress[5..0]"
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT GND "wren"
 // Retrieval info: CONNECT: @address_a 0 0 6 0 wraddress 0 0 6 0
 // Retrieval info: CONNECT: @address_b 0 0 6 0 rdaddress 0 0 6 0
 // Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
-// Retrieval info: CONNECT: @data_a 0 0 40 0 data 0 0 40 0
+// Retrieval info: CONNECT: @data_a 0 0 80 0 data 0 0 80 0
 // Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0
-// Retrieval info: CONNECT: q 0 0 40 0 @q_b 0 0 40 0
+// Retrieval info: CONNECT: q 0 0 80 0 @q_b 0 0 80 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL lobRam.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL lobRam.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL lobRam.cmp FALSE

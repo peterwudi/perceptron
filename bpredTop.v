@@ -186,7 +186,7 @@ module bpredTop(
 );
 
 parameter perceptronSize	= 64;
-parameter ghrSize				= 8;
+parameter ghrSize				= 16;
 
 /*
 fetch_bpredictor_PC is to be used before clock edge
@@ -240,7 +240,6 @@ reg	[hob*ghrSize-1:0]			up_hob_data_c;
 wire	[lob*ghrSize-1:0]			lu_lob_data;
 reg	[lob*ghrSize-1:0]			lu_lob_data_r;
 reg	[lob*ghrSize-1:0]			up_lob_data;
-
 
 wire	[31:0]						fetch_bpredictor_inst;
 
@@ -597,9 +596,45 @@ assign bpredictor_fetch_p_dir	= is_branch & (is_cond | is_ret | is_call) & perce
 `endif
 
 
-// Update perceptron
-// The update logic should not affect fmax because (1) it has 2 cycles before the branch is resolved,
-// and (2) it might not be required to have the update result written back immediately.
+//// Update perceptron (regular)
+//generate
+//	for (i = 0; i < ghrSize; i = i + 1) begin: per_update
+//		always @(posedge clk) begin
+//			execute_bpredictor_data[0][(i+1)*8-1:i*8]
+//				<= {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]} - 1;
+//			execute_bpredictor_data[1][(i+1)*8-1:i*8]
+//				<= {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]} + 1;
+//			
+//			execute_bpredictor_data_c[0][(i+1)*8-1:i*8]
+//				<= 1 - {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]};
+//			execute_bpredictor_data_c[1][(i+1)*8-1:i*8]
+//				<= -'sd1 - {lu_hob_data_r[(i+1)*hob-1:i*hob], lu_lob_data_r[(i+1)*lob-1:i*lob]};
+//		end
+//	end
+//	
+//	always @(posedge clk) begin
+//		lu_hob_data_r	<= lu_hob_data;
+//		lu_lob_data_r	<= lu_lob_data;
+//	
+//		if (execute_bpredictor_miss == 1) begin
+//			up_hob_data		<= execute_bpredictor_data[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+//			up_hob_data_c	<= execute_bpredictor_data_c[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+//			up_lob_data		<= execute_bpredictor_data[0][lob*ghrSize-1:0];
+//		end
+//		else begin
+//			up_hob_data		<= execute_bpredictor_data[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+//			up_hob_data_c	<= execute_bpredictor_data_c[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
+//			up_lob_data		<= execute_bpredictor_data[1][lob*ghrSize-1:0];
+//		end
+//	end
+//endgenerate
+
+// Update perceptron (new organization)
+reg	[ghrSize/2*8-1:0] a;
+reg	[ghrSize/2*8-1:0] b;
+reg	[ghrSize/2*8-1:0] aBar;
+reg	[ghrSize/2*8-1:0] bBar;
+
 generate
 	for (i = 0; i < ghrSize; i = i + 1) begin: per_update
 		always @(posedge clk) begin
@@ -618,19 +653,39 @@ generate
 	always @(posedge clk) begin
 		lu_hob_data_r	<= lu_hob_data;
 		lu_lob_data_r	<= lu_lob_data;
-	
-		if (execute_bpredictor_miss == 1) begin
-			up_hob_data		<= execute_bpredictor_data[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
-			up_hob_data_c	<= execute_bpredictor_data_c[0][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
-			up_lob_data		<= execute_bpredictor_data[0][lob*ghrSize-1:0];
-		end
-		else begin
-			up_hob_data		<= execute_bpredictor_data[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
-			up_hob_data_c	<= execute_bpredictor_data_c[1][ghrSize*8-1:ghrSize*8-1-hob*ghrSize+1];
-			up_lob_data		<= execute_bpredictor_data[1][lob*ghrSize-1:0];
+	end
+		
+	for (i = 0; i < ghrSize; i = i + 2) begin: per_diff_calc
+		always @(posedge clk) begin
+			if (execute_bpredictor_miss == 1) begin
+				a[(i/2+1)*8-1:(i/2)*8]
+					<= 0-execute_bpredictor_data[0][(i+1)*8-1:i*8]+execute_bpredictor_data[0][(i+2)*8-1:(i+1)*8];
+				b[(i/2+1)*8-1:(i/2)*8]
+					<= 0-execute_bpredictor_data[0][(i+1)*8-1:i*8]-execute_bpredictor_data[0][(i+2)*8-1:(i+1)*8];
+				aBar[(i/2+1)*8-1:(i/2)*8]
+					<= execute_bpredictor_data[0][(i+1)*8-1:i*8]-execute_bpredictor_data[0][(i+2)*8-1:(i+1)*8];
+				bBar[(i/2+1)*8-1:(i/2)*8]
+					<= execute_bpredictor_data[0][(i+1)*8-1:i*8]+execute_bpredictor_data[0][(i+2)*8-1:(i+1)*8];
+			end
+			else begin
+				a[(i/2+1)*8-1:(i/2)*8]
+					<= 0-execute_bpredictor_data[1][(i+1)*8-1:i*8]+execute_bpredictor_data[1][(i+2)*8-1:(i+1)*8];
+				b[(i/2+1)*8-1:(i/2)*8]
+					<= 0-execute_bpredictor_data[1][(i+1)*8-1:i*8]-execute_bpredictor_data[1][(i+2)*8-1:(i+1)*8];
+				aBar[(i/2+1)*8-1:(i/2)*8]
+					<= execute_bpredictor_data[1][(i+1)*8-1:i*8]-execute_bpredictor_data[1][(i+2)*8-1:(i+1)*8];
+				bBar[(i/2+1)*8-1:(i/2)*8]
+					<= execute_bpredictor_data[1][(i+1)*8-1:i*8]+execute_bpredictor_data[1][(i+2)*8-1:(i+1)*8];
+			end		
+				
+			up_hob_data[(i+2)*hob-1:i*hob] <= {a[(i/2+1)*8-1:(i/2+1)*8-1-hob+1], b[(i/2+1)*8-1:(i/2+1)*8-1-hob+1]};
+			up_hob_data_c[(i+2)*hob-1:i*hob] <= {aBar[(i/2+1)*8-1:(i/2+1)*8-1-hob+1], bBar[(i/2+1)*8-1:(i/2+1)*8-1-hob+1]};
+			up_lob_data[(i+2)*lob-1:i*lob]	<= {a[(i/2)*8+lob-1:(i/2)*8], b[(i/2)*8+lob-1:(i/2)*8]};
 		end
 	end
 endgenerate
+
+
 
 assign up_wen	= reset | (~soin_bpredictor_stall & execute_bpredictor_update);
 
