@@ -422,7 +422,7 @@ wire signed	[5:0]	perceptronSum;
 wire signed	[6:0]	perRes_lvl1 [5:0];
 wire signed [6:0]	perRes_lvl2 [2:0];
 
-// For 3-bit 12 GHR bits
+// For 3-bit 8 GHR bits
 assign	perceptronRes = ~perceptronSum[5];
 
 // For 3-bit 12 GHR bits
@@ -480,17 +480,54 @@ genvar i;
 //endgenerate
 
 // Wallace tree-like structure
-wire [hob*ghrSize-1:0]	wallaceInput;
+
+// Direct implementation of perceptron calculation
+//wire [hob*ghrSize-1:0]	wallaceInput;
+//
+//generate
+//	for (i = 0; i < ghrSize; i = i + 1) begin: wallace
+//		// Calculate negative here. 228.99 MHz
+//		//assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1);
+//		
+//		// Read pre-computed negative, 263.78 MHz
+//		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data_c[(i+1)*hob-1:i*hob];
+//	end
+//endgenerate
+
+// A new organization, store -w1+w2 and -w1-w2 instead
+reg [hob*ghrSize/2-1:0]	wallaceInput;
 
 generate
-	for (i = 0; i < ghrSize; i = i + 1) begin: wallace
-		// Calculate negative here. 228.99 MHz
-		//assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : (~lu_hob_data[(i+1)*hob-1:i*hob] + 1);
-		
-		// Read pre-computed negative, 263.78 MHz
-		assign wallaceInput[(i+1)*hob-1:i*hob] = (GHR[i] == 1) ? lu_hob_data[(i+1)*hob-1:i*hob] : lu_hob_data_c[(i+1)*hob-1:i*hob];
+	// w0 = -a+b, w1 = -a-b, ~w0 = a-b, ~w1 = a+B
+	// g0		g1		output
+	// ------------------
+	// 0		0		w1
+	// 0		1		w0
+	// 1		0		~w0
+	// 1		1		~w1
+	for (i = 0; i < ghrSize; i = i + 2) begin: wallace
+		always@(*) begin
+			case ({GHR[i], GHR[i+1]})
+				2'b00: begin
+					wallaceInput[(i/2+1)*hob-1:(i/2)*hob] = lu_hob_data[(i+2)*hob-1:(i+1)*hob];
+				end
+				2'b01: begin
+					wallaceInput[(i/2+1)*hob-1:(i/2)*hob] = lu_hob_data[(i+1)*hob-1:i*hob];
+				end
+				2'b10: begin
+					wallaceInput[(i/2+1)*hob-1:(i/2)*hob] = lu_hob_data_c[(i+1)*hob-1:i*hob];
+				end
+				2'b11: begin
+					wallaceInput[(i/2+1)*hob-1:(i/2)*hob] = lu_hob_data_c[(i+2)*hob-1:(i+1)*hob];
+				end
+				default: begin
+					wallaceInput[(i/2+1)*hob-1:(i/2)*hob] = 8'b0;
+				end
+			endcase
+		end
 	end
 endgenerate
+
 
 // 254.71 MHz
 //wallace_3bit_12 wallaceTree(
